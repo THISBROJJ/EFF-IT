@@ -38,7 +38,7 @@ record `app_types = []` and note it in the output.
 
 ## Step 2 — Scan concern files
 
-List all files in `.claude/security-concerns/`.
+List all files in `security/concerns/`.
 
 For each file:
 1. Read the file.
@@ -55,7 +55,7 @@ For each file:
 ## Step 3 — Load profiles
 
 For each `app_type` in the list from Step 1:
-- Check whether `.claude/security-profiles/{app_type}.md` exists.
+- Check whether `security/profiles/{app_type}.md` exists.
 - If yes: read it, mark as loaded.
 - If no: note it as unknown type — warn in the output, do not fail.
 
@@ -142,8 +142,8 @@ other fields.
 
 ## Hard rules
 
-- Never modify `SPEC.md`, `CLAUDE.md`, or any file under `.claude/security-concerns/`
-  or `.claude/security-profiles/`.
+- Never modify `SPEC.md`, `CLAUDE.md`, or any file under `security/concerns/`
+  or `security/profiles/`.
 - Write exactly two files: `sessions/{run_id}/SECURITY_CONCERNS.md` and
   `sessions/{run_id}/checkpoint.json`.
 - Do not emit a verdict or audit commentary — output the two files and stop.

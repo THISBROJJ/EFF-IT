@@ -13,8 +13,9 @@ in `.claude/` and `sessions/`; your actual project source goes in `src/`, `tests
   hooks/              — shell scripts wired to Claude Code lifecycle events
   agents/             — subagent definitions (markdown + YAML frontmatter)
   commands/           — slash-command workflows invoked interactively
-  security-profiles/  — app-type threat model profiles (loaded by concern-resolver)
-  security-concerns/  — trigger-based concern definitions (scanned per-run)
+security/
+  profiles/           — app-type threat model profiles (loaded by concern-resolver)
+  concerns/           — trigger-based concern definitions (scanned per-run)
 sessions/
   {run_id}/   — self-contained per-run artifacts (checkpoint, spec, plan, logs)
 tests/

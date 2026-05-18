@@ -22,7 +22,7 @@ cat .current_run 2>/dev/null
 
 If found:
 - Read `sessions/{run_id}/SECURITY_CONCERNS.md`
-- For each `app_type` listed under "Loaded App-Type Profiles", read `.claude/security-profiles/{app_type}.md`
+- For each `app_type` listed under "Loaded App-Type Profiles", read `security/profiles/{app_type}.md`
 - Collect all items from `## Review Checklist` across both SECURITY_CONCERNS.md and loaded profiles
 - These items form a **mandatory verification list** — every item must appear in the Step 3 report with an explicit verdict: PASS, FAIL, or UNVERIFIABLE — [reason]
 
