@@ -1,5 +1,5 @@
 # EFF-IT
-> "You know what? EFF-IT. Let the agents handle it." — me, TAT
+> "You know what? EFF-IT. Let the agents handle it." 
 
 A Claude Code harness that wraps any software project with a full AI-assisted development workflow — from raw idea to merged PR.
 
