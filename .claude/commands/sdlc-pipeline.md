@@ -38,7 +38,7 @@ Capture the refined problem statement as `IDEA_SUMMARY`.
 
 Spawn the `spec-drafter` agent:
 - Input: `IDEA_SUMMARY` + any constraints confirmed during interrogation
-- Output: `docs/specs/<slug>.md` — capture path as `SPEC_PATH`
+- Output: `sessions/<run_id>/SPEC.md` — capture path as `SPEC_PATH`
 
 `<slug>` is kebab-case derived from the spec title chosen by spec-drafter.
 
@@ -57,7 +57,7 @@ Confirm branch is active before continuing.
 
 Spawn the `orchestrator` agent:
 - Input: `SPEC_PATH`, `SLUG`
-- Output: `docs/plans/<slug>.md` — capture path as `PLAN_PATH`
+- Output: `sessions/<run_id>/PLAN.md` — capture path as `PLAN_PATH`
 
 ---
 
@@ -65,9 +65,9 @@ Spawn the `orchestrator` agent:
 
 Spawn the `architect` agent in Architecture Draft mode (Trigger A):
 - Input: `SPEC_PATH`, `PLAN_PATH`, `SLUG`
-- Output: `docs/architecture/<slug>.md`
+- Output: `sessions/<run_id>/ARCHITECTURE.md`
 
-Initialize the session run log: create `sessions/runs/<slug>.md` with a header:
+Initialize the session run log: create `sessions/<run_id>/run.md` with a header:
 ```
 # Session Run — <slug>
 Started: <YYYY-MM-DD HH:MM>
@@ -123,11 +123,11 @@ Spawn the `git-expert` agent:
 
 | Artifact | Path |
 |---|---|
-| Spec | `docs/specs/<slug>.md` |
-| Task plan | `docs/plans/<slug>.md` |
-| Proposed architecture | `docs/architecture/<slug>.md` |
+| Spec | `sessions/<run_id>/SPEC.md` |
+| Task plan | `sessions/<run_id>/PLAN.md` |
+| Proposed architecture | `sessions/<run_id>/ARCHITECTURE.md` |
 | Canonical architecture | `ARCHITECTURE.md` (root, updated) |
-| Problems log | `docs/problems.md` |
-| Session run log | `sessions/runs/<slug>.md` |
+| Problems log | `sessions/<run_id>/PROBLEMS.md` |
+| Session run log | `sessions/<run_id>/run.md` |
 | Feature branch | `feat/<slug>` |
 | PR | GitHub PR → `main` |

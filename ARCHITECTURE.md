@@ -149,9 +149,11 @@ sessions/
   "branch": "feat/user-auth-flow",
   "iteration": 2,
   "max_iterations": 5,
+  "test_command": null,
   "feature_types": ["open_endpoint", "jwt"]
 }
 ```
+_`"test_command"` — test runner command string, or `null` to auto-detect._
 
 ---
 

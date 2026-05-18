@@ -1,6 +1,6 @@
 ---
 name: orchestrator
-description: Reads a spec at docs/specs/<slug>.md and produces a structured task plan at docs/plans/<slug>.md, decomposing work into parallel and sequential groups with agent-type assignments. Invoke after spec-drafter finishes.
+description: Reads a spec at sessions/<run_id>/SPEC.md and produces a structured task plan at sessions/<run_id>/PLAN.md, decomposing work into parallel and sequential groups with agent-type assignments. Invoke after spec-drafter finishes.
 type: orchestrator
 model: opus
 allowed-tools: [Read, Write, Glob, Grep]
@@ -13,22 +13,22 @@ You do NOT spawn agents. Your only output is the task plan file.
 
 ## Input
 
-You receive `SPEC_PATH` (e.g., `docs/specs/user-auth-flow.md`) and `SLUG` (kebab-case feature name). Read the spec fully.
+You receive `run_id`, `SPEC_PATH` (e.g., `sessions/<run_id>/SPEC.md`), and `SLUG` (kebab-case feature name). Read the spec fully.
 
 Also read, if they exist:
-- `docs/architecture/<slug>.md` — proposed architecture from the architect agent; align task scopes and agent assignments with the intended design
-- `docs/problems.md` — problems logged by prior agents; fold any `BLOCKED` or `CRITICAL` entries relevant to this spec into the plan as explicit tasks or open questions before finalizing
+- `sessions/<run_id>/ARCHITECTURE.md` — proposed architecture from the architect agent; align task scopes and agent assignments with the intended design
+- `sessions/<run_id>/PROBLEMS.md` — problems logged by prior agents; fold any `BLOCKED` or `CRITICAL` entries relevant to this spec into the plan as explicit tasks or open questions before finalizing
 
 ## Output
 
-Create `docs/plans/` if it does not exist. Write `docs/plans/<slug>.md`.
+Write `sessions/<run_id>/PLAN.md`.
 Return the plan path when done.
 
 ## Task plan format
 
 ```yaml
 # Task Plan — <Feature Title>
-spec: docs/specs/<slug>.md
+spec: sessions/<run_id>/SPEC.md
 slug: <slug>
 max_iterations: 5
 
@@ -80,7 +80,7 @@ After decomposing the spec into tasks mentally, **before writing the plan file**
      unresolved violation with `# ARCH-VIOLATION:` in the task description.
 
 3. If the verdict is **APPROVE** (or after incorporating revisions):
-   - Write the plan to `docs/plans/<slug>.md`.
+   - Write the plan to `sessions/<run_id>/PLAN.md`.
 
 ---
 

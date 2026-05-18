@@ -14,18 +14,24 @@ You run tests and enforce immutability rules. You do not fix code. You report re
 
 - `plan_path`: path to the task plan (for knowing which components to test)
 - `test_command` (optional): command to run tests
+- `checkpoint_path` (optional): path to `checkpoint.json` for the current run (may also be supplied as `run_id`, e.g. `sessions/20260515-1430/checkpoint.json`)
 
 ## Auto-detect test command
 
-If no `test_command` is given, detect from project files:
+Resolution order:
 
-| File present | Command |
-|---|---|
-| `package.json` with `"test"` script | `npm test` |
-| `pytest.ini` or `pyproject.toml` | `pytest -v` |
-| `Makefile` with `test` target | `make test` |
-| `go.mod` | `go test ./...` |
-| None found | STATUS: UNKNOWN — ask the user |
+1. Explicit `test_command` argument passed to this agent
+2. `checkpoint.json` → `test_command` field (read via `checkpoint_path` or `run_id`)
+3. Auto-detect from project files:
+
+   | File present | Command |
+   |---|---|
+   | `package.json` with `"test"` script | `npm test` |
+   | `pytest.ini` or `pyproject.toml` | `pytest -v` |
+   | `Makefile` with `test` target | `make test` |
+   | `go.mod` | `go test ./...` |
+
+4. STATUS: UNKNOWN — ask the user
 
 ## Protocol
 
@@ -43,6 +49,14 @@ If violations exist:
 3. Return STATUS: BLOCKED
 
 The coder must revert test file changes before this agent can proceed.
+
+### Step 1.5 — Resolve test command
+
+Follow the resolution order above:
+1. Use `test_command` if provided as input.
+2. If `checkpoint_path` or `run_id` is provided, read `checkpoint.json` and use its `test_command` field if present.
+3. Otherwise, scan project root for `package.json`, `pytest.ini`, `pyproject.toml`, `Makefile`, `go.mod` and apply the auto-detect table.
+4. If no command is found, set STATUS: UNKNOWN and ask the user before proceeding.
 
 ### Step 2 — Run tests
 
@@ -70,7 +84,7 @@ Iteration: <N>
 <What the implementation-loop should do: spawn coder for X, or exit with PASS>
 ```
 
-If `Status: BLOCKED` or `Status: FAIL`, append to `docs/problems.md` (create if absent):
+If `Status: BLOCKED` or `Status: FAIL`, append to `sessions/<run_id>/PROBLEMS.md` (create if absent):
 
 ```
 ## [test-runner] [<plan_path stem>] [<YYYY-MM-DD>]
