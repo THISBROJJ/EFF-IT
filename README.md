@@ -25,6 +25,9 @@ Every run is self-contained under `sessions/{run_id}/` with a `checkpoint.json` 
 │   ├── commands/   — slash-command workflows (/run, /fast-lane, /resume, git-*, etc.)
 │   ├── agents/     — subagents spawned by commands (orchestrator, coder, karen, etc.)
 │   └── hooks/      — lifecycle hooks (logging, secrets scanning, test immutability)
+├── security/
+│   ├── profiles/   — app-type threat model profiles (loaded by concern-resolver)
+│   └── concerns/   — trigger-based concern definitions (scanned per-run)
 ├── sessions/       — per-run artifacts and tool call logs
 ├── tests/
 │   └── fixtures/   — pre-baked inputs for testing pipeline stages
