@@ -6,7 +6,7 @@ Each pipeline run (`/run`, `/fast-lane`, `/resume`) creates a self-contained dir
 sessions/
   {run_id}/                    ← e.g. 20260515-1430
     checkpoint.json            ← current pipeline stage; used by /resume
-    session_log.json           ← every tool call during this run (JSONL)
+    session_log.jsonl          ← every tool call during this run (JSONL)
     SPEC.md                    ← feature specification
     PLAN.md                    ← task plan (orchestrator output)
     ARCHITECTURE.md            ← proposed architecture for this feature

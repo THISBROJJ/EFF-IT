@@ -1,0 +1,12 @@
+{
+  "run_id": "20260101-0000",
+  "slug": "add-user-auth",
+  "stage": "done",
+  "spec_path": "sessions/20260101-0000/SPEC.md",
+  "plan_path": "sessions/20260101-0000/PLAN.md",
+  "branch": "feat/add-user-auth",
+  "iteration": 3,
+  "max_iterations": 5,
+  "started_at": "2026-01-01T00:00:00Z",
+  "completed_at": "2026-01-01T01:15:00Z"
+}

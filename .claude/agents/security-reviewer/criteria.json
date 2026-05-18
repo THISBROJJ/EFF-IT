@@ -1,0 +1,24 @@
+{
+  "criteria": [
+    {
+      "id": "sec-01",
+      "description": "All 10 OWASP Top 10 categories are explicitly checked",
+      "check": "The trace shows that each of the 10 OWASP categories (A01 through A10) was evaluated against the changed files. The '## OWASP findings' section of the report must reference or explicitly clear all 10 categories — a silent omission of any category is a FAIL of this criterion."
+    },
+    {
+      "id": "sec-02",
+      "description": "Each finding includes file:line, severity, description, and remediation",
+      "check": "Every row in the '## OWASP findings' table has non-empty values in all five columns: Category, File:line, Severity, Description, and Remediation. A finding row missing any of these columns is a FAIL of this criterion."
+    },
+    {
+      "id": "sec-03",
+      "description": "Verdict appears at the top of the report",
+      "check": "The emitted security review report contains the string 'Verdict:' within its first 10 lines, before the '## Secrets scan', '## OWASP findings', or '## Security concerns checklist' sections."
+    },
+    {
+      "id": "sec-04",
+      "description": "Security concerns checklist items from SECURITY_CONCERNS.md each receive an explicit verdict",
+      "check": "If SECURITY_CONCERNS.md was loaded, every item from its '## Review Checklist' appears in the report with a verdict of PASS, FAIL, or UNVERIFIABLE (with reason). An item present in SECURITY_CONCERNS.md but absent from the report is a FAIL of this criterion. If SECURITY_CONCERNS.md was not found, this criterion is SKIP."
+    }
+  ]
+}
