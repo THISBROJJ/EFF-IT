@@ -84,7 +84,7 @@ Iteration: <N>
 <What the implementation-loop should do: spawn coder for X, or exit with PASS>
 ```
 
-If `Status: BLOCKED` or `Status: FAIL`, append to `docs/problems.md` (create if absent):
+If `Status: BLOCKED` or `Status: FAIL`, append to `sessions/<run_id>/PROBLEMS.md` (create if absent):
 
 ```
 ## [test-runner] [<plan_path stem>] [<YYYY-MM-DD>]
