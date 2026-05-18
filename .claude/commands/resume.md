@@ -13,6 +13,33 @@ last incomplete stage.
 
 ---
 
+## Step 0 — Staleness guard (pre-flight)
+
+If `.current_run` exists, read it to get the `run_id`, then validate before proceeding:
+
+```bash
+if [ -f .current_run ]; then
+  run_id=$(cat .current_run)
+
+  # Check 1: session directory and checkpoint must exist
+  if [ ! -f "sessions/${run_id}/checkpoint.json" ]; then
+    echo "Error: session ${run_id} not found. Remove .current_run manually if this run is abandoned."
+    exit 1
+  fi
+
+  # Check 2: run must not already be complete
+  stage=$(jq -r '.stage' "sessions/${run_id}/checkpoint.json")
+  if [ "$stage" = "done" ]; then
+    echo "Error: run ${run_id} is already complete (stage: done). To start a new run use /run. To examine the completed run, read sessions/${run_id}/."
+    exit 1
+  fi
+fi
+```
+
+If `.current_run` is absent, skip this step and proceed to Step 1.
+
+---
+
 ## Step 1 — Locate the checkpoint
 
 If `$ARGUMENTS` is a `run_id` (e.g. `20260515-1430`):

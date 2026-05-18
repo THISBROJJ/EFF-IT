@@ -1,0 +1,24 @@
+{
+  "criteria": [
+    {
+      "id": "orch-01",
+      "description": "Every acceptance criterion from the spec maps to at least one task",
+      "check": "The written plan's 'acceptance_criteria' section lists every AC-## from the spec. Each criterion's 'covered_by' field is a non-empty array. Any criterion with an empty 'covered_by' or absent from the plan is a FAIL of this criterion. Criteria listed as 'UNCOVERED — needs explicit task' also count as a FAIL (they indicate a planning gap)."
+    },
+    {
+      "id": "orch-02",
+      "description": "No two parallel tasks within the same parallel group share the same scope file",
+      "check": "For every parallel group in the plan, all tasks within that group have distinct 'scope' values. If any two tasks in the same parallel group list the same file or directory as scope, this criterion fails. Sequential groups are exempt (sequential ordering prevents merge conflicts)."
+    },
+    {
+      "id": "orch-03",
+      "description": "Plan is written to sessions/<run_id>/PLAN.md",
+      "check": "The trace shows a Write tool call whose target path matches 'sessions/<run_id>/PLAN.md'. The file must not be written to docs/plans/ or any other location."
+    },
+    {
+      "id": "orch-04",
+      "description": "Every task has a depends_on field (even if empty)",
+      "check": "Every task entry in the written plan contains a 'depends_on' key. Its value may be an empty list [] but the key must be present. A task missing 'depends_on' entirely is a FAIL of this criterion."
+    }
+  ]
+}

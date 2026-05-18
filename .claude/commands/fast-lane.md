@@ -43,6 +43,15 @@ mkdir -p sessions/<run_id>
 echo "<run_id>" > .current_run
 ```
 
+Detect or prompt for the test command:
+- Check for `package.json` with a `"test"` script → `npm test`
+- Check for `pytest.ini` or `pyproject.toml` → `pytest -v`
+- Check for `Makefile` with a `test` target → `make test`
+- Check for `go.mod` → `go test ./...`
+- If none found, ask the user: "What command runs your tests? (leave blank to auto-detect later)"
+
+Write the detected/provided value (or null) as `test_command` in the initial checkpoint.json.
+
 `sessions/<run_id>/checkpoint.json`:
 ```json
 {
@@ -55,7 +64,8 @@ echo "<run_id>" > .current_run
   "branch": null,
   "iteration": 0,
   "max_iterations": 5,
-  "feature_types": []
+  "feature_types": [],
+  "test_command": null
 }
 ```
 
@@ -143,7 +153,11 @@ Update checkpoint: `"stage": "git"`.
 Spawn the `git-expert` agent:
 - Commit, push, open PR against `main`
 
-Update checkpoint: `"stage": "done"`.
+Update checkpoint: `"stage": "done"`. Clear the active run marker:
+
+```bash
+rm -f .current_run
+```
 
 ---
 
