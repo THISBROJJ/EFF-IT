@@ -55,13 +55,9 @@ After all agents in the group complete:
   - Pass the task description as the original ask and the task's `scope` as the change set
   - Wait for all Karen verdicts
   - PASS → continue; PARTIAL or FAIL → append findings to `sessions/<run_id>/PROBLEMS.md`, mark task `NEEDS_RETRY`
-- Append each agent's I/O to `sessions/<run_id>/PROGRESS_TRACKER.md`:
-  ```
-  ## [<agent-type>] [<task-id>] [iteration <N>]
-  **Input:** task: `<description>` | scope: `<scope>`
-  **Output:** Status: <DONE|BLOCKED> | <changed files or one-line summary>
-  **Karen:** <PASS|PARTIAL|FAIL|n/a> | <findings if any>
-  ```
+- After each agent (and its Karen verdict) completes, spawn `session-keeper` with:
+  - `run_id`, `agent_name`, `task_id`, `iteration`, `status`, `summary`, `karen_verdict`, `karen_findings`, `scope`
+  - Await session-keeper before starting the next agent group
 
 Pass each agent: `task_description`, `scope`, `spec_path`, and any `context`
 from prior iterations (test-runner failure output for the relevant component).
@@ -74,7 +70,9 @@ For each sequential group, in order:
 - Pass the result of the prior task as `context` to the next
 - For **coder** tasks: after the agent completes, spawn Karen with the task description and scope
   - PASS → continue; PARTIAL or FAIL → append findings to `sessions/<run_id>/PROBLEMS.md`, mark task `NEEDS_RETRY`
-- Append the agent's I/O to `sessions/<run_id>/PROGRESS_TRACKER.md` using the same format as step 2
+- After each agent (and its Karen verdict) completes, spawn `session-keeper` with:
+  - `run_id`, `agent_name`, `task_id`, `iteration`, `status`, `summary`, `karen_verdict`, `karen_findings`, `scope`
+  - Await session-keeper before starting the next agent group
 
 **4. Run tests**
 
