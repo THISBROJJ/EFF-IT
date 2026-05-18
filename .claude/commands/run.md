@@ -7,21 +7,9 @@ allowed-tools: [Agent, Bash, Read, Write, Glob, Grep]
 
 # Run — Full SDLC Pipeline
 
-Full AI-assisted development lifecycle from idea to merged PR.
-Trigger: user brings a new idea, feature request, or problem statement.
-
----
-
 ## Pre-flight
 
-Confirm the repo is on `main` with a clean working tree:
-
-```bash
-git status --short
-git branch --show-current
-```
-
-If not clean or not on main, ask the user to commit/stash and sync before proceeding.
+Confirm the repo is on `main` with a clean working tree (`git status --short`, `git branch --show-current`). If not clean or not on main, ask the user to commit/stash and sync first.
 
 ---
 
@@ -36,6 +24,15 @@ mkdir -p sessions/<run_id>
 echo "<run_id>" > .current_run
 ```
 
+Detect or prompt for the test command:
+- Check for `package.json` with a `"test"` script → `npm test`
+- Check for `pytest.ini` or `pyproject.toml` → `pytest -v`
+- Check for `Makefile` with a `test` target → `make test`
+- Check for `go.mod` → `go test ./...`
+- If none found, ask the user: "What command runs your tests? (leave blank to auto-detect later)"
+
+Write the detected/provided value (or null) as `test_command` in the initial checkpoint.json.
+
 Write `sessions/<run_id>/checkpoint.json`:
 ```json
 {
@@ -48,7 +45,8 @@ Write `sessions/<run_id>/checkpoint.json`:
   "branch": null,
   "iteration": 0,
   "max_iterations": 5,
-  "feature_types": []
+  "feature_types": [],
+  "test_command": null
 }
 ```
 
@@ -73,10 +71,7 @@ Spawn the `spec-drafter` agent:
 - Input: `IDEA_SUMMARY` + any constraints confirmed during interrogation
 - Output: `sessions/<run_id>/SPEC.md`
 
-Derive `slug` (kebab-case) from the spec title. Update checkpoint:
-```json
-{ "slug": "<slug>", "stage": "branch", "spec_path": "sessions/<run_id>/SPEC.md" }
-```
+Derive `slug` (kebab-case) from the spec title. Update checkpoint: `slug`, `stage: branch`, `spec_path`.
 
 ---
 
@@ -85,23 +80,17 @@ Derive `slug` (kebab-case) from the spec title. Update checkpoint:
 Spawn the `git-expert` agent:
 - Task: create branch `feat/<slug>` from `main` and check it out
 
-Confirm branch is active. Update checkpoint:
-```json
-{ "stage": "orchestrate", "branch": "feat/<slug>" }
-```
+Confirm branch is active. Update checkpoint: `stage: orchestrate`, `branch: feat/<slug>`.
 
 ---
 
 ## Step 4 — Orchestrate
 
 Spawn the `orchestrator` agent:
-- Input: `sessions/<run_id>/SPEC.md`, `slug`
+- Input: `sessions/<run_id>/SPEC.md`, `slug`, `run_id`
 - Output: `sessions/<run_id>/PLAN.md`
 
-Update checkpoint:
-```json
-{ "stage": "concern", "plan_path": "sessions/<run_id>/PLAN.md" }
-```
+Update checkpoint: `stage: concern`, `plan_path`.
 
 ---
 
@@ -161,6 +150,18 @@ Update checkpoint: `"stage": "security"`.
 
 ---
 
+## Step 6.5 — Post-karen evaluation
+
+After karen returns PASS, before architect Trigger B:
+- Invoke `/evaluate-run <run_id>`
+- Append the one-line summary from EVALUATION.md to `sessions/<run_id>/PROGRESS_TRACKER.md`:
+  ```
+  ## [evaluate-run] [post-karen] [iteration <N>]
+  **Output:** <N passed> / <M total> agents scored | overall: PASS/PARTIAL/FAIL
+  ```
+
+---
+
 ## Step 7 — Security review
 
 Spawn the `security-reviewer` agent.
@@ -189,17 +190,4 @@ rm -f .current_run
 
 ---
 
-## Artifacts
-
-| Artifact | Path |
-|---|---|
-| Spec | `sessions/<run_id>/SPEC.md` |
-| Task plan | `sessions/<run_id>/PLAN.md` |
-| Security concern checklist | `sessions/<run_id>/SECURITY_CONCERNS.md` |
-| Proposed architecture | `sessions/<run_id>/ARCHITECTURE.md` |
-| Canonical architecture | `ARCHITECTURE.md` (root, updated at Step 6) |
-| Progress tracker | `sessions/<run_id>/PROGRESS_TRACKER.md` |
-| Problems log | `sessions/<run_id>/PROBLEMS.md` |
-| Checkpoint | `sessions/<run_id>/checkpoint.json` |
-| Feature branch | `feat/<slug>` |
-| PR | GitHub PR → `main` |
+All artifacts land in `sessions/<run_id>/`. See `ARCHITECTURE.md` — Session structure for the full list.

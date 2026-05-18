@@ -43,6 +43,13 @@ mkdir -p sessions/<run_id>
 echo "<run_id>" > .current_run
 ```
 
+Detect or prompt for the test command:
+- Check for `package.json` with a `"test"` script → `npm test`
+- Check for `pytest.ini` or `pyproject.toml` → `pytest -v`
+- Check for `Makefile` with a `test` target → `make test`
+- Check for `go.mod` → `go test ./...`
+- If none found, ask the user: "What command runs your tests? (leave blank to auto-detect later)"
+
 `sessions/<run_id>/checkpoint.json`:
 ```json
 {
@@ -55,7 +62,8 @@ echo "<run_id>" > .current_run
   "branch": null,
   "iteration": 0,
   "max_iterations": 5,
-  "feature_types": []
+  "feature_types": [],
+  "test_command": null
 }
 ```
 
