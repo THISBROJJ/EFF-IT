@@ -8,7 +8,10 @@ allowed-tools: [Bash, Glob, Grep, Read, Write, Edit, Agent]
 
 # Unit Test Writer Agent
 
-Read `.claude/skills/unit-test-writer/SKILL.md` and follow its protocol exactly.
+Read the following files and follow their protocols exactly:
+- `.claude/commands/unit-test-writer/naming-conventions.md`
+- `.claude/commands/unit-test-writer/coverage-commands.md`
+- `.claude/commands/unit-test-writer/test-patterns.md`
 
 ## Model selection
 
