@@ -1,5 +1,0 @@
-{"ts":"2026-05-18T20:32:07Z","tool":"Grep","input":{"pattern":"F-IT","path":null,"glob":"**/*.{json,sh,yaml,yml}"}}
-{"ts":"2026-05-18T20:32:07Z","tool":"Grep","input":{"pattern":"F-IT","path":null,"glob":"**/*.md"}}
-{"ts":"2026-05-18T20:32:10Z","tool":"Read","input":{"file":"D:\\Users\\lizhang\\workspace\\personal\\F-IT\\README.md","offset":null,"limit":5}}
-{"ts":"2026-05-18T20:32:26Z","tool":"Edit","input":{"file":"D:\\Users\\lizhang\\workspace\\personal\\F-IT\\README.md","replace_all":false}}
-{"ts":"2026-05-18T20:32:34Z","tool":"Edit","input":{"file":"D:\\Users\\lizhang\\workspace\\personal\\F-IT\\CLAUDE.md","replace_all":false}}
