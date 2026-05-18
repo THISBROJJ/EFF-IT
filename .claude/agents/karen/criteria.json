@@ -1,22 +1,24 @@
-[
-  {
-    "id": "karen-01",
-    "description": "Verdict appears at the top of the report",
-    "check": "The emitted audit report contains the string 'Verdict:' within its first 10 lines, before any acceptance-criteria table or findings section."
-  },
-  {
-    "id": "karen-02",
-    "description": "Every PASS criterion has a file:line citation",
-    "check": "For every row in the acceptance-criteria table marked 'PASS', the Evidence column contains a citation matching the pattern '<filename>:<line-number>' (e.g. 'src/auth.js:42'). A PASS row with no such citation is a FAIL of this criterion."
-  },
-  {
-    "id": "karen-03",
-    "description": "Anti-pattern scan runs independently of acceptance criteria",
-    "check": "The report contains a 'Findings' section (or equivalent anti-patterns section) that is populated by scanning the diff directly, not derived solely from the acceptance-criteria checklist. If the acceptance criteria all PASS but the diff contains a known anti-pattern category (test tampering, error handling rot, silenced signals, surface-only fixes, scope drift), the finding still appears in this section."
-  },
-  {
-    "id": "karen-04",
-    "description": "Acceptance criteria are derived from the original ask, not paraphrased",
-    "check": "The acceptance-criteria checklist uses the user's own terms (or verbatim AC-## IDs from a spec file if one was provided). No criterion is stated in the implementer's narrative or purely in technical terms invented by Karen."
-  }
-]
+{
+  "criteria": [
+    {
+      "id": "karen-01",
+      "description": "Verdict appears at the top of the report",
+      "check": "The emitted audit report contains the string 'Verdict:' within its first 10 lines, before any acceptance-criteria table or findings section."
+    },
+    {
+      "id": "karen-02",
+      "description": "Every PASS criterion has a file:line citation",
+      "check": "For every row in the acceptance-criteria table marked 'PASS', the Evidence column contains a citation matching the pattern '<filename>:<line-number>' (e.g. 'src/auth.js:42'). A PASS row with no such citation is a FAIL of this criterion."
+    },
+    {
+      "id": "karen-03",
+      "description": "Anti-pattern scan runs independently of acceptance criteria",
+      "check": "The report contains a 'Findings' section that is populated by scanning the diff directly, not derived solely from the acceptance-criteria checklist. If the acceptance criteria all PASS but the diff contains a known anti-pattern category (test tampering, error handling rot, silenced signals, surface-only fixes, scope drift), the finding still appears in this section."
+    },
+    {
+      "id": "karen-04",
+      "description": "Acceptance criteria are derived from the original ask, not paraphrased",
+      "check": "The acceptance-criteria checklist uses the user's own terms (or verbatim AC-## IDs from a spec file if one was provided). No criterion is stated in the implementer's narrative or purely in technical terms invented by Karen."
+    }
+  ]
+}

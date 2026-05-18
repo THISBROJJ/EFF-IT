@@ -1,22 +1,24 @@
-[
-  {
-    "id": "cr-01",
-    "description": "SPEC.md is scanned for all keywords from all concern files",
-    "check": "The trace shows that every file in security/concerns/ was read and its '## Trigger Keywords' items were extracted and individually tested against the SPEC.md content. No concern file is skipped. If a concern file exists but no keyword-check step appears in the trace for it, this criterion fails."
-  },
-  {
-    "id": "cr-02",
-    "description": "All app_types from CLAUDE.md are loaded when their profile file exists",
-    "check": "For each app_type declared under 'app_types' in CLAUDE.md, the trace shows an attempt to read security/profiles/{app_type}.md. If the file exists and was not read, this criterion fails. An unknown type (no matching profile file) must produce a warning in SECURITY_CONCERNS.md rather than a silent skip."
-  },
-  {
-    "id": "cr-03",
-    "description": "SECURITY_CONCERNS.md is written with the required sections",
-    "check": "The written SECURITY_CONCERNS.md contains all four required sections in order: '## Triggered Concerns', '## Loaded App-Type Profiles', '## Architect Checklist', and '## Review Checklist'. Each section is present even if its content is the designated empty-state placeholder ('No concerns triggered.', 'None — app_types not declared in CLAUDE.md.', or '(empty)')."
-  },
-  {
-    "id": "cr-04",
-    "description": "checkpoint.json feature_types field is updated with triggered concern names",
-    "check": "The trace shows that sessions/{run_id}/checkpoint.json was read, its 'feature_types' field was set to an array of triggered concern names (file-name-without-extension strings), and the file was written back. No other fields in checkpoint.json were modified."
-  }
-]
+{
+  "criteria": [
+    {
+      "id": "cr-01",
+      "description": "SPEC.md is scanned for all keywords from all concern files",
+      "check": "The trace shows that every file in security/concerns/ was read and its '## Trigger Keywords' items were extracted and individually tested against the SPEC.md content. No concern file is skipped. If a concern file exists but no keyword-check step appears in the trace for it, this criterion fails."
+    },
+    {
+      "id": "cr-02",
+      "description": "All app_types from CLAUDE.md are loaded when their profile file exists",
+      "check": "For each app_type declared under 'app_types' in CLAUDE.md, the trace shows an attempt to read security/profiles/{app_type}.md. If the file exists and was not read, this criterion fails. An unknown type (no matching profile file) must produce a warning in SECURITY_CONCERNS.md rather than a silent skip."
+    },
+    {
+      "id": "cr-03",
+      "description": "SECURITY_CONCERNS.md is written with the required sections",
+      "check": "The written SECURITY_CONCERNS.md contains all four required sections in order: '## Triggered Concerns', '## Loaded App-Type Profiles', '## Architect Checklist', and '## Review Checklist'. Each section is present even if its content is the designated empty-state placeholder ('No concerns triggered.', 'None — app_types not declared in CLAUDE.md.', or '(empty)')."
+    },
+    {
+      "id": "cr-04",
+      "description": "checkpoint.json feature_types field is updated with triggered concern names",
+      "check": "The trace shows that sessions/{run_id}/checkpoint.json was read, its 'feature_types' field was set to an array of triggered concern names (file-name-without-extension strings), and the file was written back. No other fields in checkpoint.json were modified."
+    }
+  ]
+}
