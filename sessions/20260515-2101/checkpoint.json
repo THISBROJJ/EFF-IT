@@ -1,0 +1,12 @@
+{
+  "run_id": "20260515-2101",
+  "slug": "context-aware-security-concern-system",
+  "started_at": "2026-05-15T21:01:33Z",
+  "stage": "done",
+  "spec_path": "sessions/20260515-2101/SPEC.md",
+  "plan_path": "sessions/20260515-2101/PLAN.md",
+  "branch": "feat/context-aware-security-concern-system",
+  "iteration": 1,
+  "max_iterations": 5,
+  "feature_types": []
+}
