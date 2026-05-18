@@ -20,15 +20,16 @@ Every run is self-contained under `sessions/{run_id}/` with a `checkpoint.json` 
 ## Structure
 
 ```
-.claude/
-  commands/   — slash-command workflows (/run, /fast-lane, /resume, git-*, etc.)
-  agents/     — subagents spawned by commands (orchestrator, coder, karen, etc.)
-  hooks/      — lifecycle hooks (logging, secrets scanning, test immutability)
-sessions/     — per-run artifacts and tool call logs
-tests/
-  fixtures/   — pre-baked inputs for testing pipeline stages
-scripts/
-  secrets-scanner.sh
+.
+├── .claude/
+│   ├── commands/   — slash-command workflows (/run, /fast-lane, /resume, git-*, etc.)
+│   ├── agents/     — subagents spawned by commands (orchestrator, coder, karen, etc.)
+│   └── hooks/      — lifecycle hooks (logging, secrets scanning, test immutability)
+├── sessions/       — per-run artifacts and tool call logs
+├── tests/
+│   └── fixtures/   — pre-baked inputs for testing pipeline stages
+└── scripts/
+    └── secrets-scanner.sh
 ```
 
 ---
