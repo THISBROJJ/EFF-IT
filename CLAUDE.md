@@ -88,7 +88,7 @@ app_types:
   - api
 ```
 
-Accepted values (must match a filename in `.claude/security-profiles/` without `.md`):
+Accepted values (must match a filename in `security/profiles/` without `.md`):
 `database`, `rag`, `ai_agent`, `web_app`, `api`, `frontend`, `networking`, `search`, `security_tool`
 
 **How it works:** The `concern-resolver` agent (runs between orchestrate and architect) loads each listed profile and unions its checklists with any trigger-keyword matches from SPEC.md. The merged result is written to `sessions/<run_id>/SECURITY_CONCERNS.md`.
