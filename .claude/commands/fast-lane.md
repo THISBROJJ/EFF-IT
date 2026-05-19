@@ -109,11 +109,29 @@ Spawn the `concern-resolver` agent:
 - Input: `run_id`, `spec_path` (`sessions/<run_id>/SPEC.md`)
 - Output: `sessions/<run_id>/SECURITY_CONCERNS.md`; updates `feature_types` in checkpoint
 
+Update checkpoint: `"stage": "architect"`.
+
+---
+
+## Step 3 — Architecture draft
+
+Spawn the `architect` agent in Architecture Draft mode (Trigger A):
+- Input: `sessions/<run_id>/SPEC.md`, `sessions/<run_id>/PLAN.md`, `slug`
+- Output: `sessions/<run_id>/ARCHITECTURE.md`
+
+Initialize the session progress log `sessions/<run_id>/PROGRESS_TRACKER.md`:
+```
+# Progress — <slug>
+Started: <YYYY-MM-DD HH:MM>
+Spec: sessions/<run_id>/SPEC.md
+Plan: sessions/<run_id>/PLAN.md
+```
+
 Update checkpoint: `"stage": "implement"`.
 
 ---
 
-## Step 3 — Implementation loop
+## Step 4 — Implementation loop
 
 Invoke the `implementation-loop` command:
 - Input: `sessions/<run_id>/PLAN.md`, `sessions/<run_id>/SPEC.md`, `run_id`, `max_iterations=5`
@@ -122,33 +140,33 @@ Update checkpoint: `"stage": "audit"`.
 
 ---
 
-## Step 4 — Completion audit
+## Step 5 — Completion audit
 
 Spawn the `karen` agent with `sessions/<run_id>/SPEC.md` as the original ask.
 
 | Karen verdict | Action |
 |---|---|
-| PASS | Continue to Step 5 |
-| PARTIAL or FAIL | Append punch list to `sessions/<run_id>/PLAN.md`; return to Step 3 |
+| PASS | Continue to Step 6 |
+| PARTIAL or FAIL | Append punch list to `sessions/<run_id>/PLAN.md`; return to Step 4 |
 
 Update checkpoint: `"stage": "security"`.
 
 ---
 
-## Step 5 — Security review
+## Step 6 — Security review
 
 Spawn the `security-reviewer` agent.
 
 | Result | Action |
 |---|---|
-| PASS | Continue to Step 6 |
-| FINDINGS | Append remediation tasks to `sessions/<run_id>/PLAN.md`; return to Step 3 |
+| PASS | Continue to Step 7 |
+| FINDINGS | Append remediation tasks to `sessions/<run_id>/PLAN.md`; return to Step 4 |
 
 Update checkpoint: `"stage": "git"`.
 
 ---
 
-## Step 6 — Git wrap-up
+## Step 7 — Git wrap-up
 
 Spawn the `git-expert` agent:
 - Commit, push, open PR against `main`
@@ -168,6 +186,8 @@ rm -f .current_run
 | Minimal spec | `sessions/<run_id>/SPEC.md` |
 | Task plan | `sessions/<run_id>/PLAN.md` |
 | Security concern checklist | `sessions/<run_id>/SECURITY_CONCERNS.md` |
+| Architecture draft | `sessions/<run_id>/ARCHITECTURE.md` |
+| Progress tracker | `sessions/<run_id>/PROGRESS_TRACKER.md` |
 | Problems log | `sessions/<run_id>/PROBLEMS.md` |
 | Checkpoint | `sessions/<run_id>/checkpoint.json` |
 | Feature branch | `feat/<slug>` |

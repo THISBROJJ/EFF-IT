@@ -1,0 +1,24 @@
+{
+  "criteria": [
+    {
+      "id": "spec-drafter-01",
+      "description": "Spec is written to sessions/<run_id>/SPEC.md, not docs/",
+      "check": "The agent's Write tool call targets a path matching 'sessions/<run_id>/SPEC.md' (e.g., 'sessions/20260518-2347/SPEC.md'). Any Write to a path containing 'docs/' — including 'docs/specs/' — is a FAIL."
+    },
+    {
+      "id": "spec-drafter-02",
+      "description": "Spec contains all required sections",
+      "check": "The written spec contains all six required top-level sections as markdown headings: 'Problem statement', 'Goals', 'Out of scope', 'Requirements' (with both 'Functional' and 'Non-functional' subsections), 'Acceptance criteria', and 'Components'. A spec missing any one of these sections is a FAIL."
+    },
+    {
+      "id": "spec-drafter-03",
+      "description": "Acceptance criteria are observable and testable",
+      "check": "Every AC-## entry in the Acceptance criteria section describes a concrete, observable outcome that can be verified by inspecting code or running the feature. Criteria phrased with subjective or vague language — such as 'should feel', 'should be easy', 'should be intuitive', 'should be obvious', or expressing intent without a verifiable outcome — are a FAIL."
+    },
+    {
+      "id": "spec-drafter-04",
+      "description": "Uncertain or missing information is marked [GAP: ...], not invented",
+      "check": "When the input does not provide enough information to fill a section (e.g., tech stack, non-functional requirements), the spec marks the gap inline as '[GAP: <description>]' rather than substituting plausible-sounding invented content. A spec that silently fills gaps with fabricated specifics is a FAIL."
+    }
+  ]
+}

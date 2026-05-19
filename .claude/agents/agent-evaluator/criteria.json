@@ -1,0 +1,19 @@
+{
+  "criteria": [
+    {
+      "id": "agent-evaluator-01",
+      "description": "Report written to session traces directory, not reports/",
+      "check": "The agent writes its JSON report to `sessions/<run_id>/traces/<agent_name>.json` (derived from the --trace path). Any Write call targeting a path outside `sessions/` or inside a `reports/` directory is a FAIL of this criterion."
+    },
+    {
+      "id": "agent-evaluator-02",
+      "description": "Every criterion in criteria.json receives a verdict with evidence",
+      "check": "For each criterion id present in the agent's criteria.json, the output report contains a corresponding entry with a verdict of PASS, FAIL, or SKIP and a non-empty evidence excerpt from the trace. A criterion id present in criteria.json but absent from the report's criteria array is a FAIL of this criterion."
+    },
+    {
+      "id": "agent-evaluator-03",
+      "description": "Score formula and overall verdict are computed correctly",
+      "check": "The report's `score` field equals `(count of PASS verdicts) / (count of non-SKIP verdicts)` rounded to two decimal places. The `verdict` field is 'PASS' when all non-SKIP criteria passed, 'FAIL' when the majority of non-SKIP criteria failed, and 'PARTIAL' otherwise. A score or verdict that does not match these rules is a FAIL of this criterion."
+    }
+  ]
+}

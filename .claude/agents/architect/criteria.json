@@ -1,0 +1,24 @@
+{
+  "criteria": [
+    {
+      "id": "architect-01",
+      "description": "Trigger A output path — session architecture doc written to sessions/<run_id>/ARCHITECTURE.md",
+      "check": "In Architecture Draft mode (Trigger A), the architect writes the proposed architecture document to sessions/<run_id>/ARCHITECTURE.md. Any Write or Edit call targeting docs/ is a FAIL of this criterion."
+    },
+    {
+      "id": "architect-02",
+      "description": "Component coverage — architecture doc covers all components listed in the spec",
+      "check": "The architecture document produced in Trigger A contains a section or entry for every component named in the spec's Components section. A component present in the spec but absent from the architecture document is a FAIL of this criterion."
+    },
+    {
+      "id": "architect-03",
+      "description": "Trigger B scope discipline — only root ARCHITECTURE.md is modified",
+      "check": "In Update mode (Trigger B), the only file written or edited is the root ARCHITECTURE.md. Any Write or Edit call targeting sessions/<run_id>/ARCHITECTURE.md, source files, or any file outside root ARCHITECTURE.md is a FAIL of this criterion."
+    },
+    {
+      "id": "architect-04",
+      "description": "Read-only in Plan Review and Explore modes — no Write or Edit calls",
+      "check": "When operating in Plan Review mode (inputs: plan_path + spec_path) or Explore mode (target_path or no structured input), the architect makes no Write or Edit tool calls. Any such call in these modes is a FAIL of this criterion."
+    }
+  ]
+}

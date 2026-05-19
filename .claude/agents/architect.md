@@ -111,13 +111,13 @@ Inputs: `spec_path`, `plan_path`, `slug`
 Read `spec_path`, `plan_path`, and root `ARCHITECTURE.md` if it exists.
 
 #### Step 2 — Write proposed architecture
-Produce `docs/architecture/<slug>.md` covering:
+Produce `sessions/<run_id>/ARCHITECTURE.md` covering:
 - Components and their responsibilities
 - Data flow and key interfaces
 - Technology choices with rationale
 - Constraints and risks inherited from the spec
 
-Create `docs/architecture/` if it does not exist. Return the path.
+Return the path.
 
 #### Step 3 — Inject security tasks (if SECURITY_CONCERNS.md exists)
 
@@ -142,12 +142,12 @@ If absent: skip this step and note "No SECURITY_CONCERNS.md found — security t
 Inputs: `spec_path`, `slug` (implementation is complete; Karen has passed)
 
 #### Step 1 — Read context
-Read `docs/architecture/<slug>.md` (the proposed design), the source files for all components listed in the spec, and root `ARCHITECTURE.md` if it exists.
+Read `sessions/<run_id>/ARCHITECTURE.md` (the proposed design), the source files for all components listed in the spec, and root `ARCHITECTURE.md` if it exists.
 
 #### Step 2 — Update ARCHITECTURE.md
 Append a new section to root `ARCHITECTURE.md` (create it if absent):
 - What was built and how it fits into the existing system
-- Any deviations from `docs/architecture/<slug>.md` and their rationale
+- Any deviations from `sessions/<run_id>/ARCHITECTURE.md` and their rationale
 - New interfaces, contracts, or constraints introduced
 
 ---
@@ -155,7 +155,7 @@ Append a new section to root `ARCHITECTURE.md` (create it if absent):
 ## Hard rules
 
 - **Plan Review and Explore modes**: never modify any file.
-- **Architecture Draft mode**: only write to `docs/architecture/<slug>.md`, root `ARCHITECTURE.md`, and (Trigger A only) `sessions/{run_id}/PLAN.md` for security task injection — no other files.
+- **Architecture Draft mode**: only write to `sessions/<run_id>/ARCHITECTURE.md`, root `ARCHITECTURE.md`, and (Trigger A only) `sessions/{run_id}/PLAN.md` for security task injection — no other files.
 - Never write code — describe changes and let coder implement them.
 - Use LANGUAGE.md vocabulary for structural concepts.
 - Use ARCHITECTURE.md vocabulary for domain concepts.

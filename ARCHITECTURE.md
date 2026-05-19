@@ -134,7 +134,7 @@ sessions/
     PROGRESS_TRACKER.md ← per-agent I/O log (auto-committed by hook)
     PROBLEMS.md         ← karen and security findings
     SECURITY_CONCERNS.md  ← triggered concerns + merged security checklists
-    session_log.json    ← (future) structured event log
+    session_log.json    ← structured tool-call log for this run
 ```
 
 `checkpoint.json` schema:
@@ -174,9 +174,12 @@ tests/
 
 ## Observability
 
-Every tool call is appended to `sessions/tool-calls-YYYY-MM-DD.jsonl` (via `log_tool_call.sh`).
-Session progress logs live in `sessions/<run_id>/PROGRESS_TRACKER.md` and are auto-committed
-on write. This gives a durable, queryable audit trail of what agents did and why.
+`log_tool_call.sh` appends one JSONL record per tool call using dual-path routing:
+
+- **Per-run log** — when `.current_run` is active, writes to `sessions/<run_id>/session_log.json` (scoped to the active pipeline run)
+- **Daily flat log** — when no run is active, writes to `sessions/tool-calls-YYYY-MM-DD.jsonl` (ad-hoc work outside a pipeline run)
+
+Both paths are complementary: the per-run log captures structured events for a specific run, while the daily log captures everything else. Session progress also lives in `sessions/<run_id>/PROGRESS_TRACKER.md` and is auto-committed on write. Together these give a durable, queryable audit trail of what agents did and why.
 
 ---
 
@@ -187,3 +190,66 @@ on write. This gives a durable, queryable audit trail of what agents did and why
 - Existing test files are immutable; create new ones instead of editing.
 - Commit messages follow Conventional Commits; no AI footers.
 - Branches follow `type/kebab-name` off `main` (trunk-based).
+
+---
+
+## Change log
+
+### 2026-05-18 — harness-eval-paths
+
+**What changed.** Closed five gaps that broke the evaluation pipeline and left
+per-run artifact paths inconsistent across the harness:
+
+1. **Agent-evaluator redesigned.** `agents/agent-evaluator.md` no longer writes
+   to a nonexistent `reports/` directory and no longer references a missing
+   `schemas/evaluation.schema.json`. Verdict reports are now written to
+   `sessions/<run_id>/traces/<agent_name>.json`, sibling to the JSONL trace
+   they score. `commands/evaluate-run.md` §4 reads from the same location and
+   aggregates into `sessions/<run_id>/EVALUATION.md`. The output contract is
+   inlined in the agent prompt instead of a separate schema file.
+2. **Seven new `criteria.json` files.** `coder`, `test-runner`,
+   `unit-test-writer`, `spec-drafter`, `git-expert`, `architect`, and
+   `agent-evaluator` each now have a `criteria.json` under
+   `.claude/agents/<name>/`. All 11 evaluable agents are now scored end-to-end;
+   previously 7 of them were silently skipped by `evaluate-run`.
+3. **Agent output paths aligned with the session convention.**
+   `agents/spec-drafter.md` and `agents/architect.md` previously documented
+   `docs/specs/<slug>.md` and `docs/architecture/<slug>.md` as outputs even
+   though every caller passed `sessions/<run_id>/SPEC.md` and
+   `sessions/<run_id>/ARCHITECTURE.md`. Both agent prompts and all internal
+   cross-references now use the session paths exclusively.
+4. **Fast-lane gained an architect step.** `commands/fast-lane.md` now invokes
+   architect Trigger A between `concern-resolver` and `implementation-loop`,
+   matching `/run`. Checkpoint transitions `concern_resolve → architect →
+   implement` mirror `run.md` so `/resume` needs no fast-lane-specific
+   branches. Without this step, fast-lane silently skipped security-task
+   injection into PLAN.md.
+5. **Stale `references/` paths corrected.** `commands/spec-drafter.md` and
+   `commands/unit-test-writer.md` previously pointed at `references/<file>.md`
+   paths that do not exist; they now reference
+   `.claude/commands/<command>/<file>.md` where the templates actually live.
+6. **Observability docs reconciled.** §Observability above no longer marks
+   `session_log.json` as "(future)" — `log_tool_call.sh` has implemented dual-
+   path routing all along.
+
+**How it fits.** This change set finishes wiring `evaluate-run` end-to-end:
+agent traces, criteria files, and verdict reports now live in one location
+(`sessions/<run_id>/traces/`) under one root (`sessions/<run_id>/`). Every
+artifact a single run produces is now under that one directory, so cleanup is
+`rm -rf sessions/<id>`, debugging is `ls sessions/<id>`, and there is no
+parallel `docs/` or `reports/` tree to keep in sync. Fast-lane and `/run` now
+follow the same agent sequence, which simplifies `/resume`.
+
+**Deviations from the proposed session architecture
+(`sessions/20260518-2347/ARCHITECTURE.md`).** None of substance. The proposed
+design — co-located verdict JSON next to JSONL trace, session-folder as single
+artifact root, fast-lane architect step keyed by checkpoint stage, no
+`schemas/` directory — was implemented as drafted. One execution-level note
+worth recording: the implementation landed across multiple follow-on commits
+(`851fe35` P1 gaps, `a38043f` P2 / evaluate-run, `26c317a` S1 wiring,
+`e1dfa98` karen punch-list fixes) rather than a single atomic commit, because
+karen's first pass surfaced criteria-schema drift across the seven new files
+(the Medium-likelihood risk the proposal flagged). That drift was resolved by
+a follow-up commit that normalized the criteria shape; the final state
+matches the proposed schema. No new directories were created; the "no new
+directories" constraint held.
