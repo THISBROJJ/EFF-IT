@@ -1,0 +1,24 @@
+{
+  "criteria": [
+    {
+      "id": "test-runner-01",
+      "description": "Immutability check runs before tests",
+      "check": "Step 1 always executes `git diff --name-only HEAD` and compares the output against the patterns in `.claude/hooks/test-file-patterns.sh` before any test command is run. If any modified file matches a test-file pattern, the agent lists each file as a VIOLATION, does NOT run tests, and returns STATUS: BLOCKED. Skipping the immutability check or running tests despite a violation is a FAIL of this criterion."
+    },
+    {
+      "id": "test-runner-02",
+      "description": "Test command resolution follows the 4-step order",
+      "check": "The agent resolves the test command in exactly this order: (1) explicit `test_command` argument, (2) `test_command` field in `checkpoint.json` via `checkpoint_path` or `run_id`, (3) auto-detect from project files (`package.json` → `npm test`, `pytest.ini`/`pyproject.toml` → `pytest -v`, `Makefile` with test target → `make test`, `go.mod` → `go test ./...`), (4) STATUS: UNKNOWN with a user prompt. Skipping any step, using a different order, or proceeding past step 4 without user input is a FAIL of this criterion."
+    },
+    {
+      "id": "test-runner-03",
+      "description": "Report contains all required sections",
+      "check": "The emitted report contains: a Status line (`PASS`, `FAIL`, `BLOCKED`, or `UNKNOWN`), an Iteration number, a Results table with columns Suite / Tests / Passed / Failed / Skipped, a Failing tests list (may be empty on PASS), and a Next action section. A report missing any of these sections is a FAIL of this criterion."
+    },
+    {
+      "id": "test-runner-04",
+      "description": "PROBLEMS.md is written to sessions/<run_id>/, not docs/",
+      "check": "When Status is FAIL or BLOCKED, the agent appends the problem entry to `sessions/<run_id>/PROBLEMS.md` (creating it if absent). Writing to `docs/problems.md`, any other path, or omitting the append entirely is a FAIL of this criterion."
+    }
+  ]
+}
