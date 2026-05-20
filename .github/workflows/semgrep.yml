@@ -4,18 +4,24 @@ on:
   push:
     branches: [main]
   pull_request:
-    branches: [main]
   schedule:
-    - cron: "0 6 * * 1"
+    - cron: '0 8 * * 1'
+
+permissions:
+  contents: read
 
 jobs:
   semgrep:
-    name: Scan
     runs-on: ubuntu-latest
-    container:
-      image: semgrep/semgrep
+
     steps:
-      - uses: actions/checkout@v4
-      - run: semgrep ci --config=auto
-        env:
-          SEMGREP_APP_TOKEN: ${{ secrets.SEMGREP_APP_TOKEN }}
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Run Semgrep
+        uses: semgrep/semgrep-action@v1
+        with:
+          config: >-
+            p/security-audit
+            p/secrets
+            p/owasp-top-ten

@@ -6,7 +6,10 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash .claude/hooks/git-commit-scope.sh"
+            "command": "bash .claude/hooks/git-commit-scope.sh",
+            "if": "Bash(git commit*)",
+            "shell": "bash",
+            "statusMessage": "Checking commit scope..."
           }
         ]
       },
@@ -15,7 +18,9 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash .claude/hooks/test-immutability.sh"
+            "command": "bash .claude/hooks/test-immutability.sh",
+            "shell": "bash",
+            "statusMessage": "Checking test file immutability..."
           }
         ]
       }
@@ -26,7 +31,9 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash .claude/hooks/log_tool_call.sh"
+            "command": "bash .claude/hooks/log_tool_call.sh",
+            "shell": "bash",
+            "statusMessage": "Logging tool call..."
           }
         ]
       },
@@ -35,7 +42,9 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash .claude/hooks/session-autocommit.sh"
+            "command": "bash .claude/hooks/session-autocommit.sh",
+            "shell": "bash",
+            "statusMessage": "Committing session artifact..."
           }
         ]
       },
@@ -44,7 +53,21 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash .claude/hooks/secrets-postwrite.sh"
+            "command": "bash .claude/hooks/secrets-postwrite.sh",
+            "shell": "bash",
+            "statusMessage": "Scanning for secrets..."
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "agent",
+            "prompt": "A git commit was just made. Hook input: $ARGUMENTS\n\nYou are Karen. Audit the work just committed:\n1. Run `git show HEAD` to see the diff and verify the commit message matches what actually changed\n2. Check that any referenced tests exist and were not trivially modified to pass\n3. Flag shortcuts, silently-skipped requirements, or coverage gaps\n\nReturn PASS if everything looks genuine, or FINDINGS with specifics (under 200 words).",
+            "if": "Bash(git commit*)",
+            "timeout": 120,
+            "statusMessage": "Karen is reviewing the commit..."
           }
         ]
       }
