@@ -82,7 +82,7 @@ def verify_stripe(
     if timestamp > current or (current - timestamp) > STRIPE_SPEC.timestamp_tolerance_s:
         raise ExpiredTimestampError(provider="stripe", reason_code="timestamp_expired")
 
-    signed_payload = f"{timestamp_str}.{payload.decode()}".encode()
+    signed_payload = timestamp_str.encode() + b"." + payload
     expected_hex = hmac.new(
         secret.encode(),
         signed_payload,
