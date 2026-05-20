@@ -46,7 +46,7 @@ bash "$SKILL_DIR/scripts/detect-framework.sh" .
 The script prints `LANGUAGE=`, `RUNNER=`, and `COVERAGE_CMD=` lines.
 Eval or parse these to obtain the values for §3.
 
-See `references/coverage-commands.md` for exact CLI flags per framework.
+See `.claude/commands/unit-test-writer/coverage-commands.md` for exact CLI flags per framework.
 
 If the script exits 1 (unknown), ask: "I couldn't detect a test framework.
 Which test runner does this project use?"
@@ -86,7 +86,7 @@ Identify from the output:
 
 If the runner is not installed or the command fails, note which files
 have no corresponding test file and treat them as 0% coverage.
-See `references/coverage-commands.md` for install instructions.
+See `.claude/commands/unit-test-writer/coverage-commands.md` for install instructions.
 
 ### §4 — Prioritise gaps
 

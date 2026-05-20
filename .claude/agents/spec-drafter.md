@@ -1,6 +1,6 @@
 ---
 name: spec-drafter
-description: Converts a refined idea or problem statement into a formal spec at docs/specs/<slug>.md. Invoke after idea-interrogator finishes; do not invoke for bug fixes or small tasks.
+description: Converts a refined idea or problem statement into a formal spec at sessions/<run_id>/SPEC.md. Invoke after idea-interrogator finishes; do not invoke for bug fixes or small tasks.
 type: specialist
 model: opus
 allowed-tools: [Read, Write, Glob]
@@ -20,9 +20,8 @@ You will receive:
 ## Output
 
 1. Derive `<slug>` as kebab-case of the feature title (e.g., `user-auth-flow`).
-2. Create `docs/specs/` if it does not exist.
-3. Write the spec to `docs/specs/<slug>.md`.
-4. Return the file path.
+2. Write the spec to `sessions/<run_id>/SPEC.md`.
+3. Return the file path.
 
 ## Spec format
 

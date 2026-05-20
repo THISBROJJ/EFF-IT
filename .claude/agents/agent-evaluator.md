@@ -43,12 +43,14 @@ Compute score as `(passed criteria) / (total non-SKIP criteria)` rounded to two 
 
 ### §5 — Write report
 
-Write the evaluation report to `reports/<trace_id>.json` conforming to
-`schemas/evaluation.schema.json`. Print a summary to stdout.
+Write the evaluation report to `sessions/<run_id>/traces/<agent_name>.json`.
+Derive `<run_id>` from the second path component of the `--trace` argument
+(e.g. `sessions/20260518-2347/traces/coder.md` → run_id is `20260518-2347`).
+Create the `traces/` directory if it does not exist. Print a summary to stdout.
 
 ## Output Format
 
-JSON file written to `reports/<trace_id>.json` with fields:
+JSON file written to `sessions/<run_id>/traces/<agent_name>.json` with fields:
 `trace_id`, `agent_name`, `evaluated_at`, `criteria[]`, `verdict`, `score`
 
 ---

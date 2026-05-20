@@ -1,0 +1,24 @@
+{
+  "criteria": [
+    {
+      "id": "unit-test-writer-01",
+      "description": "Tests are written to a new file only — never editing existing test files",
+      "check": "The agent's Changed section and tool calls must only use Write (create) for test files, never Edit on a path that already existed as a test file. A test file path is one matching: '*.test.{js,ts,jsx,tsx}', '*.spec.{js,ts,jsx,tsx}', 'test_*.py', '*_test.go', '*Test.java', or any file under 'tests/', '__tests__/'. Any Edit operation targeting a pre-existing test file path is a FAIL of this criterion."
+    },
+    {
+      "id": "unit-test-writer-02",
+      "description": "Test file naming follows language conventions from naming-conventions.md",
+      "check": "Every new test file created must conform to the language-appropriate convention defined in .claude/commands/unit-test-writer/naming-conventions.md: JS/TS (Jest/Vitest) → '<name>.test.{js,ts,jsx,tsx}' colocated with the source or in '__tests__/'; Python (pytest) → 'test_<name>.py' under 'tests/'; Go → '<name>_test.go' in the same package directory as the source. A test file whose name does not match the detected language's pattern is a FAIL of this criterion."
+    },
+    {
+      "id": "unit-test-writer-03",
+      "description": "Coverage threshold is verified after writing tests using scripts in .claude/commands/unit-test-writer/scripts/",
+      "check": "The report must include a coverage section showing results from running the coverage command and checking against the threshold via check-threshold.sh. The coverage results must list each file touched with pass/fail indicator against the threshold. A report that completes test-writing without a coverage check is a FAIL of this criterion."
+    },
+    {
+      "id": "unit-test-writer-04",
+      "description": "Report includes test file path(s) and count of test cases written",
+      "check": "The structured agent report must contain: (1) a 'Scope:' field listing the path(s) of each test file created; (2) a summary stating the number of test files and test cases added (e.g. 'Added 1 test file(s), 6 test case(s)'). A report missing either of these elements is a FAIL of this criterion."
+    }
+  ]
+}
