@@ -28,11 +28,11 @@ and notes on which sections are typically weakest.
 
 | Doc type | Reference file | Use for |
 |---|---|---|
-| `prd` | `references/prd.md` | Product/feature scope, success metrics, rollout. Narrative form. |
-| `tech-spec` | `references/technical-spec.md` | Engineering implementation, API surface, data model, rollout |
-| `design-doc` | `references/design-doc.md` | Cross-team architecture, hard-to-reverse decisions (Google-style) |
-| `speckit` | `references/speckit-spec.md` | Spec-driven dev with prioritized user stories, FR-### IDs, Given-When-Then, separate `plan.md`. Tech-stack-agnostic by design. |
-| `tessl` | `references/tessl-spec.md` | Repo-resident `.spec.md` with `targets` and inline `[@test]` links. Implementation-coupled, single logical unit. |
+| `prd` | `.claude/commands/spec-drafter/prd.md` | Product/feature scope, success metrics, rollout. Narrative form. |
+| `tech-spec` | `.claude/commands/spec-drafter/technical-spec.md` | Engineering implementation, API surface, data model, rollout |
+| `design-doc` | `.claude/commands/spec-drafter/design-doc.md` | Cross-team architecture, hard-to-reverse decisions (Google-style) |
+| `speckit` | `.claude/commands/spec-drafter/speckit-spec.md` | Spec-driven dev with prioritized user stories, FR-### IDs, Given-When-Then, separate `plan.md`. Tech-stack-agnostic by design. |
+| `tessl` | `.claude/commands/spec-drafter/tessl-spec.md` | Repo-resident `.spec.md` with `targets` and inline `[@test]` links. Implementation-coupled, single logical unit. |
 
 **Picking between them** when the user is ambiguous:
 

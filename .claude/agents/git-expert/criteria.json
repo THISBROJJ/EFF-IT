@@ -1,0 +1,24 @@
+{
+  "criteria": [
+    {
+      "id": "git-expert-01",
+      "description": "Branch name follows type/kebab-name convention",
+      "check": "The branch created by the agent matches the pattern `<type>/<kebab-name>` where type is one of feat, fix, docs, chore, refactor, test, ci, hotfix, perf — and the name portion uses only lowercase letters and hyphens (no underscores, no uppercase, no spaces). A branch that does not match this pattern is a FAIL."
+    },
+    {
+      "id": "git-expert-02",
+      "description": "Commit message follows Conventional Commits format and contains no AI-generated trailers",
+      "check": "The commit message subject matches `type(scope): description` or `type: description` (scope is optional). Additionally, the full commit message must not contain any AI attribution trailers such as 'Co-Authored-By: Claude', '🤖 Generated with', or similar AI footer lines. A message violating either the format rule or the no-AI-trailer rule is a FAIL."
+    },
+    {
+      "id": "git-expert-03",
+      "description": "PR is opened against main (not master or any other branch)",
+      "check": "The pull request created by the agent targets the `main` branch as its base. A PR that targets `master`, a feature branch, or any branch other than `main` is a FAIL."
+    },
+    {
+      "id": "git-expert-04",
+      "description": "No force-push to a protected branch",
+      "check": "The agent never executes `git push --force` or `git push -f` (or any equivalent such as `--force-with-lease` against main/master) targeting `main` or `master`. Any force-push to a protected branch is a FAIL."
+    }
+  ]
+}

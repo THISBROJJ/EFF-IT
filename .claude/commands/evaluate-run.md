@@ -75,11 +75,11 @@ For each agent in the evaluation set:
    --agent <agent_name>
    ```
    The evaluator reads `.claude/agents/<agent_name>/criteria.json` internally
-   and writes its JSON report to `reports/<trace_id>.json`.
+   and writes its JSON report to `sessions/<run_id>/traces/<agent_name>.json`.
 
 3. After the spawn completes, read the JSON report written by `agent-evaluator`
-   (path: `reports/<agent_name>.json` or the `trace_id`-based path the evaluator
-   emits). Extract `score`, `verdict`, and the count of evaluated criteria.
+   (path: `sessions/<run_id>/traces/<agent_name>.json`). Extract `score`,
+   `verdict`, and the count of evaluated criteria.
 
 Collect one result row per agent: `agent_name`, `tasks_evaluated` (count of
 distinct `task_id` values for this agent), `score`, `verdict`.

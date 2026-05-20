@@ -1,0 +1,24 @@
+{
+  "criteria": [
+    {
+      "id": "coder-01",
+      "description": "Scope discipline — only files within the assigned scope are modified",
+      "check": "Every Write or Edit tool call targets a file path that is a child of (or exactly matches) the scope value passed to the coder. Any Write or Edit targeting a path outside the assigned scope is a FAIL of this criterion, regardless of whether the change appears correct."
+    },
+    {
+      "id": "coder-02",
+      "description": "Test file immutability — no test files are modified",
+      "check": "No file matching the patterns in .claude/hooks/test-file-patterns.sh (directory segments: tests?, __tests__, specs?, evaluation; suffixes: .test.<ext>, .spec.<ext>, /test_*, _test.<ext>) is written or edited. If a test file must change, the report Status must be BLOCKED, not DONE. A DONE report that includes test-file modifications is a FAIL of this criterion."
+    },
+    {
+      "id": "coder-03",
+      "description": "Report format — all five required fields are present",
+      "check": "The coder's final response contains all five labeled fields on separate lines: 'Task:', 'Scope:', 'Status:', 'Changed:', and 'Notes:'. A response missing any of these five fields, or using alternate casing or punctuation that differs from this exact format, is a FAIL of this criterion."
+    },
+    {
+      "id": "coder-04",
+      "description": "BLOCKED handling — appends to sessions/<run_id>/PROBLEMS.md with the required format",
+      "check": "When Status is BLOCKED, the coder appends a section to sessions/<run_id>/PROBLEMS.md (not docs/problems.md or any other path) containing a heading that matches the pattern '## [coder] [<task-id>] [<YYYY-MM-DD>]' followed by bold-labeled fields: '**Problem:**', '**Impact:**', and '**Suggested fix:**'. A BLOCKED report that writes to a different path or omits any required field is a FAIL of this criterion."
+    }
+  ]
+}
