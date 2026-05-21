@@ -84,7 +84,6 @@ and tools in a defined sequence. Live in `.claude/commands/` as flat `.md` files
 | `idea-interrogator` | `/idea-interrogator` | Socratic interview loop until the problem is fully specified |
 | `spec-drafter` | `/spec-drafter` | Drafts PRD, technical spec, design doc, or Tessl spec from conversation context |
 | `architect` | `/architect` | Surfaces refactor opportunities; may write ADRs and update `ARCHITECTURE.md` |
-| `completion-auditor` | `/completion-auditor` | Audits a claimed-done task; produces PASS / PARTIAL / FAIL with evidence |
 | `git-branch` | `/git-branch` | Creates and names branches following trunk-based conventions |
 | `git-commit` | `/git-commit` | Stages and commits with a well-formed Conventional Commit message |
 | `git-merge` | `/git-merge` | Resolves merge/rebase conflicts interactively |
