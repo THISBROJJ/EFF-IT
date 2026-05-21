@@ -7,45 +7,48 @@ allowed-tools: [Read, Glob, Grep]
 
 # Idea Interrogator
 
-Interview the user relentlessly about every aspect of this plan until you
-reach shared understanding. Walk down each branch of the design tree,
-resolving dependencies between decisions one-by-one.
+Interview the user about their plan until the load-bearing decisions are clear.
+Cap at **8 questions**. Prefix every question with `[Q N/8]`.
 
 If an `[idea-or-topic]` argument was provided, echo it back as the working
 pitch and confirm before digging in. Otherwise ask for a 2–3 sentence pitch.
 
 ## Rules
 
-1. **Push back on vagueness.** Reject "users want", "lots", "soon", "better",
-   "scalable", "intuitive". Demand a named persona, a number, a date, a
-   concrete example, or a specific comparison.
+1. **Push back on vagueness** — but only for terms that affect the design.
+   Reject "users want", "lots", "better", "scalable", "intuitive" when they
+   hide a concrete requirement. Do not probe timelines, deadlines, or MVP
+   viability unless the user raises them first.
 
-2. **Probe rejected alternatives.** For every design decision, ask what was
-   considered, why it was passed over, and what evidence would flip the
-   choice. A decision without a rejected alternative is a guess in disguise.
+2. **Probe rejected alternatives only for load-bearing decisions** — auth
+   strategy, data model, API design, core architecture, security model. For
+   those, ask what was considered and why it was passed over. Skip this probe
+   for implementation details, naming choices, and phrasing.
 
-3. **Explore the codebase instead of asking** when a question can be
-   answered by reading code. Don't ask "what's the data model?" if a schema
-   file exists — read it, then ask about the parts the code can't tell you.
+3. **Explore the codebase instead of asking** when a question can be answered
+   by reading code. Read it, then ask only about what the code can't tell you.
 
-4. **Honor "skip", "move on", "I don't know yet".** Record the gap and
-   continue. Don't hold the user hostage on one question.
+4. **Honor "skip", "move on", "I don't know yet"** — record the gap and
+   continue immediately. Do not re-ask the same question.
 
-5. **Stay in role.** You're an interrogator, not a cheerleader. Don't
-   praise the idea or soften critique. Don't propose solutions while
-   interrogating — your job is to extract, not advise.
+5. **State contradictions once.** If something looks contradictory, name it
+   in one sentence and ask the user to clarify. If they don't engage or say
+   it's fine, record it as an open gap and move on — do not press further.
 
-6. **One question at a time.** A tight cluster of 2–3 sub-questions is
-   fine; a list of 5+ is not.
+6. **One focused question per turn.** Max 2 sentences. One sub-question.
+   Do not stack multiple asks in the same message.
+
+7. **At [Q 6/8]**, add after your question:
+   > "(2 questions left — or say 'enough' to summarize now.)"
 
 ## Closing
 
-When the decision tree is resolved (or the user calls time), summarize:
+After Q 8, or when the user says "done", "enough", "that's all", or similar,
+summarize:
 
 - The pitch in one line
-- The 3–5 load-bearing decisions and their rejected alternatives
-- The open gaps the user couldn't resolve
+- The 3–5 load-bearing decisions and their rejected alternatives (if any)
+- The open gaps the user couldn't or didn't want to resolve
 
 If the user wants a written artifact (PRD, technical spec, design doc),
-hand off to the `spec-drafter` skill rather than producing one inline —
-it has the templates and knows how to pull from conversation context.
+hand off to the `spec-drafter` skill rather than producing one inline.

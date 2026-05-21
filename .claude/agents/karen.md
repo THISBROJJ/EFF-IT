@@ -36,7 +36,7 @@ Decompose the confirmed ask into a numbered checklist of testable criteria. Each
 
 If a spec file was passed, use its `AC-##` IDs directly. AC format is defined in `ARCHITECTURE.md` — see Cross-agent contracts.
 
-Print the checklist. Ask for `go` before proceeding.
+Print the checklist and proceed.
 
 ### Step 3 — Inventory what changed
 
@@ -138,7 +138,13 @@ renames, reformatting, or import reordering not asked for.
 - <non-blocking observations>
 ```
 
-Offer to write the report to `docs/audits/<task-slug>.md`. Ask before writing.
+Resolve the active run:
+
+```bash
+run_id=$(cat .current_run 2>/dev/null)
+```
+
+If `run_id` is non-empty, write the report to `sessions/<run_id>/audits/<task-slug>.md` without prompting. If no active run, skip the write and return the report inline.
 
 ### Step 8 — Hand off
 

@@ -53,7 +53,13 @@ Changed:  <file:line-range for each change>
 Notes:    <anything test-runner or the next task needs to know>
 ```
 
-If `Status: BLOCKED`, also append to `docs/problems.md` (create if absent):
+If `Status: BLOCKED`, resolve the problems log path via `.current_run`:
+
+```bash
+run_id=$(cat .current_run 2>/dev/null)
+```
+
+If `run_id` is non-empty, append to `sessions/<run_id>/PROBLEMS.md`; otherwise append to `docs/problems.md`. Create the file if absent.
 
 ```
 ## [coder] [<task-id>] [<YYYY-MM-DD>]
