@@ -65,22 +65,25 @@ acceptance_criteria:
 
 <!-- AC format (ID rules, stability, zero-padding) is defined in `ARCHITECTURE.md` — see Cross-agent contracts. -->
 
-## Architectural review (before writing the plan)
+## Architectural review
 
-After decomposing the spec into tasks mentally, **before writing the plan file**:
+After decomposing the spec into tasks:
 
-1. Spawn the `architect` agent in Plan Review mode:
-   - Input: a draft plan (hold it in memory, not yet written to disk) + `spec_path`
+1. Write the draft plan to `sessions/<run_id>/PLAN.md`.
+
+2. Spawn the `architect` agent in Plan Review mode:
+   - Input: `plan_path` (`sessions/<run_id>/PLAN.md`) + `spec_path`
    - The agent checks all tasks against architectural rules and returns APPROVE or REVISE.
 
-2. If the verdict is **REVISE**:
+3. If the verdict is **REVISE**:
    - Incorporate every violation finding into the task decomposition.
-   - Re-check with the architect agent (max 2 iterations).
-   - If violations persist after 2 iterations, write the plan anyway and annotate each
-     unresolved violation with `# ARCH-VIOLATION:` in the task description.
+   - Overwrite `sessions/<run_id>/PLAN.md` with the revised plan.
+   - Re-spawn architect (max 2 iterations).
+   - If violations persist after 2 iterations, annotate each unresolved violation with
+     `# ARCH-VIOLATION:` in the task description and finalize the plan as-is.
 
-3. If the verdict is **APPROVE** (or after incorporating revisions):
-   - Write the plan to `sessions/<run_id>/PLAN.md`.
+4. If the verdict is **APPROVE** (or after incorporating revisions):
+   - The plan at `sessions/<run_id>/PLAN.md` is final.
 
 ---
 

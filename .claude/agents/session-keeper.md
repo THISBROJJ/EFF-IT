@@ -40,7 +40,16 @@ Construct the path: `sessions/<run_id>/PROGRESS_TRACKER.md`
 Read the file at that path.
 
 - If the file exists and has content, capture the full existing content.
-- If the file does not exist or is empty, use this header as the starting content:
+- If the file does not exist or is empty, seed the header from `sessions/<run_id>/checkpoint.json`:
+
+```
+# Progress — <slug>
+Started: <started_at formatted as YYYY-MM-DD HH:MM>
+Spec: <spec_path>
+Plan: <plan_path>
+```
+
+If checkpoint.json cannot be read or any field is null, fall back to:
 
 ```
 # Progress Tracker — <run_id>

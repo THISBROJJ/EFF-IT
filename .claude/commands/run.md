@@ -112,14 +112,6 @@ Spawn the `architect` agent in Architecture Draft mode (Trigger A):
 - Input: `sessions/<run_id>/SPEC.md`, `sessions/<run_id>/PLAN.md`, `slug`
 - Output: `sessions/<run_id>/ARCHITECTURE.md`
 
-Initialize the session progress log `sessions/<run_id>/PROGRESS_TRACKER.md`:
-```
-# Progress — <slug>
-Started: <YYYY-MM-DD HH:MM>
-Spec: sessions/<run_id>/SPEC.md
-Plan: sessions/<run_id>/PLAN.md
-```
-
 Update checkpoint: `"stage": "implement"`.
 
 ---
