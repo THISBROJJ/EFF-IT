@@ -25,7 +25,7 @@ is omitted, infer the agent name from the `agent_name` field in the trace JSON.
 
 ### §2 — Load criteria
 
-Read `agents/<agent-name>/criteria.json`. Each criterion has an `id`, `description`,
+Read `.claude/agents/<agent-name>/criteria.json`. Each criterion has an `id`, `description`,
 and `check` (a plain-language description of what constitutes a pass).
 
 ### §3 — Score each criterion
