@@ -146,10 +146,22 @@ Spawn the `karen` agent with `sessions/<run_id>/SPEC.md` as the original ask.
 
 | Karen verdict | Action |
 |---|---|
-| PASS | Continue to Step 6 |
+| PASS | Continue to Step 5.5 |
 | PARTIAL or FAIL | Append punch list to `sessions/<run_id>/PLAN.md`; return to Step 4 |
 
 Update checkpoint: `"stage": "security"`.
+
+---
+
+## Step 5.5 — Post-karen evaluation
+
+After karen returns PASS, before security review:
+- Invoke `/evaluate-run <run_id>`
+- Append the one-line summary from EVALUATION.md to `sessions/<run_id>/PROGRESS_TRACKER.md`:
+  ```
+  ## [evaluate-run] [post-karen] [iteration <N>]
+  **Output:** <N passed> / <M total> agents scored | overall: PASS/PARTIAL/FAIL
+  ```
 
 ---
 
