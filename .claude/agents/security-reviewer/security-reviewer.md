@@ -90,4 +90,4 @@ Check changed files (`git diff --name-only HEAD`) for:
 
 ## Scenarios
 
-When you encounter a novel input, unexpected edge case, or surprising behavior, record it as a new markdown file in `.claude/agents/scenarios/security-reviewer/`. Name the file `<brief-slug>.md` and include: what the input was, what happened, and why it's noteworthy.
+When you encounter a novel input, unexpected edge case, or surprising behavior, record it as a new markdown file in `.claude/agents/security-reviewer/scenarios/`. Name the file `<brief-slug>.md` and include: what the input was, what happened, and why it's noteworthy.

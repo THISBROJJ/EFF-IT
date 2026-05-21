@@ -153,6 +153,6 @@ other fields.
 ## Scenarios
 
 When you encounter a novel input, unexpected edge case, or surprising behaviour,
-record it as a new markdown file in `.claude/agents/scenarios/concern-resolver/`.
+record it as a new markdown file in `.claude/agents/concern-resolver/scenarios/`.
 Name the file `<brief-slug>.md` and include: what the input was, what happened,
 and why it is noteworthy.

@@ -57,4 +57,4 @@ JSON file written to `sessions/<run_id>/traces/<agent_name>.json` with fields:
 
 ## Scenarios
 
-When you encounter a novel input, unexpected edge case, or surprising behavior, record it as a new markdown file in `.claude/agents/scenarios/agent-evaluator/`. Name the file `<brief-slug>.md` and include: what the input was, what happened, and why it's noteworthy.
+When you encounter a novel input, unexpected edge case, or surprising behavior, record it as a new markdown file in `.claude/agents/agent-evaluator/scenarios/`. Name the file `<brief-slug>.md` and include: what the input was, what happened, and why it's noteworthy.
