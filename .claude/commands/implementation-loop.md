@@ -41,6 +41,7 @@ On the first iteration, before spawning any coder:
 - Pass each `unit-test-writer`: `task_description`, `scope`, and `spec_path`.
 - Wait for all `unit-test-writer` agents to complete.
 - Verify test files now exist. If a unit-test-writer could not produce tests (e.g., scope is infrastructure-only), note it and continue — do not block.
+- **REQUIRED — record before proceeding:** For each `unit-test-writer` agent that ran, spawn `session-keeper` in parallel (one call per agent) with: `run_id`, `agent_name="unit-test-writer"`, `task_id`, `iteration=1`, `status` (`DONE` or `BLOCKED`), `summary`, `karen_verdict="n/a"`, `karen_findings=""`, `scope`. Wait for all session-keeper calls to complete before proceeding to step 2.
 
 Skip this step on iterations 2+ (tests already exist from iteration 1; coders are now fixing failures, not starting from scratch).
 
@@ -51,13 +52,10 @@ For each parallel group (process all parallel groups before sequential):
 - Wait for all to complete
 
 After all agents in the group complete:
-- For each **coder** task, spawn Karen simultaneously (one Agent call per coder task):
-  - Pass the task description as the original ask and the task's `scope` as the change set
-  - Wait for all Karen verdicts
-  - PASS → continue; PARTIAL or FAIL → append findings to `sessions/<run_id>/PROBLEMS.md`, mark task `NEEDS_RETRY`
-- After each agent (and its Karen verdict) completes, spawn `session-keeper` with:
-  - `run_id`, `agent_name`, `task_id`, `iteration`, `status`, `summary`, `karen_verdict`, `karen_findings`, `scope`
-  - Await session-keeper before starting the next agent group
+
+**Karen** — For each **coder** task, spawn Karen simultaneously (one Agent call per coder task). Pass the task description as the original ask and the task's `scope` as the change set. Wait for all Karen verdicts. PASS → continue; PARTIAL or FAIL → append findings to `sessions/<run_id>/PROBLEMS.md`, mark task `NEEDS_RETRY`.
+
+**REQUIRED — record before proceeding to next group:** For **every** agent in this group (coder and non-coder alike), spawn `session-keeper` in parallel (one call per agent) with: `run_id`, `agent_name`, `task_id`, `iteration`, `status` (`DONE` or `BLOCKED`), `summary`, `karen_verdict` (Karen's verdict for coder tasks; `"n/a"` for all other agent types), `karen_findings`, `scope`. Wait for **all** session-keeper calls to complete. Do not start the next group until this step finishes.
 
 Pass each agent: `task_description`, `scope`, `spec_path`, and any `context`
 from prior iterations (test-runner failure output for the relevant component).
@@ -66,17 +64,15 @@ Coders must not modify test files — the tests written in step 1.5 are the acce
 **3. Spawn sequential groups**
 
 For each sequential group, in order:
-- Spawn one agent at a time
-- Pass the result of the prior task as `context` to the next
-- For **coder** tasks: after the agent completes, spawn Karen with the task description and scope
-  - PASS → continue; PARTIAL or FAIL → append findings to `sessions/<run_id>/PROBLEMS.md`, mark task `NEEDS_RETRY`
-- After each agent (and its Karen verdict) completes, spawn `session-keeper` with:
-  - `run_id`, `agent_name`, `task_id`, `iteration`, `status`, `summary`, `karen_verdict`, `karen_findings`, `scope`
-  - Await session-keeper before starting the next agent group
+- Spawn one agent at a time. Pass the result of the prior task as `context` to the next.
+- **Karen** (coder tasks only): after the agent completes, spawn Karen with the task description and scope. Wait for verdict. PASS → continue; PARTIAL or FAIL → append findings to `sessions/<run_id>/PROBLEMS.md`, mark task `NEEDS_RETRY`.
+- **REQUIRED — record before proceeding to next task:** Spawn `session-keeper` with: `run_id`, `agent_name`, `task_id`, `iteration`, `status` (`DONE` or `BLOCKED`), `summary`, `karen_verdict` (Karen's verdict for coder tasks; `"n/a"` for all other agent types), `karen_findings`, `scope`. Wait for session-keeper to complete. Do not start the next task until this step finishes.
 
 **4. Run tests**
 
-Spawn the `test-runner` agent with `PLAN_PATH`.
+Spawn the `test-runner` agent with `PLAN_PATH`. Wait for it to complete.
+
+**REQUIRED — record before acting on result:** Spawn `session-keeper` with: `run_id`, `agent_name="test-runner"`, `task_id="test-runner"`, `iteration`, `status="DONE"`, `summary` (e.g. "PASS — 42 tests" or "FAIL — 3 tests failing"), `karen_verdict="n/a"`, `karen_findings=""`, `scope="all"`. Wait for session-keeper to complete before reading the test result below.
 
 | Test result | Action |
 |---|---|
