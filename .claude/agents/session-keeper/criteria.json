@@ -1,0 +1,24 @@
+{
+  "criteria": [
+    {
+      "id": "session-keeper-01",
+      "description": "Scope discipline — only sessions/<run_id>/PROGRESS_TRACKER.md is touched",
+      "check": "Every Read, Write, or Edit tool call targets exactly the path `sessions/<run_id>/PROGRESS_TRACKER.md` (or `sessions/<run_id>/checkpoint.json` read-only when seeding the header). Any Read, Write, or Edit targeting any other path is a FAIL of this criterion."
+    },
+    {
+      "id": "session-keeper-02",
+      "description": "Append-only — existing tracker content is preserved verbatim",
+      "check": "When the tracker exists and is non-empty before the run, the bytes of the existing content appear unchanged as a prefix of the final written content. Any modification, truncation, reordering, or rewriting of pre-existing entries is a FAIL of this criterion."
+    },
+    {
+      "id": "session-keeper-03",
+      "description": "Entry format — the new block matches the documented 4-line shape",
+      "check": "The newly appended block contains exactly these four lines in order: a heading `## [<agent_name>] [<task_id>] [iteration <iteration>]`, an Input line `**Input:** task: \\`<task_id>\\` | scope: \\`<scope>\\``, an Output line `**Output:** Status: <status> | <summary>` where status is `DONE` or `BLOCKED`, and a Karen line `**Karen:** <karen_verdict> | <karen_findings>` where verdict is `PASS`, `PARTIAL`, `FAIL`, or `n/a`. A block missing any of the four lines, using a different label, or containing a status/verdict value outside the allowed set is a FAIL of this criterion."
+    },
+    {
+      "id": "session-keeper-04",
+      "description": "Header seeding — first write reads checkpoint.json and seeds the documented header",
+      "check": "When the tracker file does not exist or is empty before the run, the final written content begins with a header sourced from `sessions/<run_id>/checkpoint.json`: a line `# Progress — <slug>` followed by `Started: <started_at as YYYY-MM-DD HH:MM>`, `Spec: <spec_path>`, and `Plan: <plan_path>`. If checkpoint.json cannot be read or any required field is null, the fallback header `# Progress Tracker — <run_id>` is used instead. Any other header shape, or omitting the header entirely on a first write, is a FAIL of this criterion."
+    }
+  ]
+}
