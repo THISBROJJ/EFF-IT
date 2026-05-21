@@ -96,7 +96,7 @@ git checkout <branch>   # if not already on it
 | `concern` | Spawn concern-resolver with `run_id` and `spec_path`; update `feature_types` in checkpoint; continue to architect |
 | `architect` | Spawn architect (Trigger A), initialize PROGRESS_TRACKER.md, continue to implement |
 | `implement` | Invoke implementation-loop with current `iteration` as starting point |
-| `audit` | Spawn karen with SPEC.md |
+| `audit` | Spawn karen with SPEC.md; on PASS, invoke `/evaluate-run <run_id>` and append its summary to PROGRESS_TRACKER.md, then continue to security |
 | `security` | Spawn security-reviewer |
 | `git` | Spawn git-expert for commit/push/PR |
 | `done` | "This run is already complete. Nothing to resume." |
@@ -107,8 +107,10 @@ For `implement`: pass `iteration` from the checkpoint so the loop doesn't restar
 
 ## Step 4 — Continue normally
 
-From the resumed stage, follow the same logic as `/run` steps through to completion.
-Update `checkpoint.json` at each stage transition exactly as `/run` does.
+From the resumed stage, follow the same logic as `/run` (or `/fast-lane` if the
+run was launched without an interrogation/spec phase) through to completion.
+Update `checkpoint.json` at each stage transition exactly as the originating
+pipeline does.
 
 ---
 

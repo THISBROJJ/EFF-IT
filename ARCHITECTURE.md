@@ -110,6 +110,7 @@ and tools in a defined sequence. Live in `.claude/commands/` as flat `.md` files
   │     └─ unit-test-writer → coder → test-runner → [karen PARTIAL/FAIL → repeat]
   │
   ├─ karen agent          →  PASS or punch list  →  sessions/<run_id>/PROBLEMS.md
+  ├─ /evaluate-run        →  (on karen PASS)     →  sessions/<run_id>/EVALUATION.md
   ├─ security-reviewer    →  PASS or remediation →  sessions/<run_id>/PROBLEMS.md
   └─ git-expert agent     →  commit → push → PR
 
