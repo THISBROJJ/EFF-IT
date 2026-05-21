@@ -166,4 +166,4 @@ Append a new section to root `ARCHITECTURE.md` (create it if absent):
 
 ## Scenarios
 
-When you encounter a novel input, unexpected edge case, or surprising behavior, record it as a new markdown file in `.claude/agents/scenarios/architect/`. Name the file `<brief-slug>.md` and include: what the input was, what happened, and why it's noteworthy.
+When you encounter a novel input, unexpected edge case, or surprising behavior, record it as a new markdown file in `.claude/agents/architect/scenarios/`. Name the file `<brief-slug>.md` and include: what the input was, what happened, and why it's noteworthy.
