@@ -11,11 +11,48 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
+from PIL import Image
 from pptx import Presentation
 from pptx.dml.color import RGBColor
 from pptx.enum.shapes import MSO_SHAPE
 from pptx.enum.text import PP_ALIGN
 from pptx.util import Emu, Inches, Pt
+
+
+REPO_ROOT = Path(__file__).resolve().parent.parent
+SCREENSHOTS_DIR = REPO_ROOT / "pptx_refs"
+ASSETS_DIR = REPO_ROOT / "docs" / "assets" / "case-study"
+
+
+def find_screenshot(time_prefix: str, suffix: str = "") -> Path:
+    """Locate a screenshot by its HH.MM.SS prefix.
+
+    Filenames contain a U+202F (narrow no-break space) before 'AM' which
+    makes direct lookup brittle — globbing is the reliable path.
+    """
+    pattern = f"Screenshot 2026-05-22 at {time_prefix}*{suffix}*.png"
+    matches = sorted(SCREENSHOTS_DIR.glob(pattern))
+    if not matches:
+        raise FileNotFoundError(f"No screenshot for {time_prefix!r}")
+    return matches[0]
+
+
+def prep_image(time_prefix: str, slug: str, max_width: int = 1600) -> Path:
+    """Copy + downscale a source screenshot into docs/assets/case-study/.
+
+    Returns the path to the prepared JPEG.
+    """
+    src = find_screenshot(time_prefix)
+    ASSETS_DIR.mkdir(parents=True, exist_ok=True)
+    dst = ASSETS_DIR / f"{slug}.jpg"
+    if dst.exists() and dst.stat().st_mtime >= src.stat().st_mtime:
+        return dst
+    img = Image.open(src).convert("RGB")
+    if img.width > max_width:
+        ratio = max_width / img.width
+        img = img.resize((max_width, int(img.height * ratio)), Image.LANCZOS)
+    img.save(dst, "JPEG", quality=85, optimize=True)
+    return dst
 
 
 # Palette
@@ -832,6 +869,344 @@ def slide_qa(prs):
     ))
 
 
+# ---------- appendix: case study (webhooksig run) ----------
+
+
+def add_picture_fit(slide, image_path, left, top, max_width, max_height,
+                    border=True):
+    """Insert an image preserving aspect ratio, fitted inside the bounding box
+    and centered within it. Returns the picture shape."""
+    with Image.open(image_path) as img:
+        iw, ih = img.size
+    box_w = float(max_width)
+    box_h = float(max_height)
+    img_ar = iw / ih
+    box_ar = box_w / box_h
+    if img_ar >= box_ar:
+        new_w = box_w
+        new_h = box_w / img_ar
+    else:
+        new_h = box_h
+        new_w = box_h * img_ar
+    cx = left + (box_w - new_w) / 2
+    cy = top + (box_h - new_h) / 2
+    pic = slide.shapes.add_picture(str(image_path), cx, cy,
+                                    width=int(new_w), height=int(new_h))
+    if border:
+        pic.line.color.rgb = ACCENT_DIM
+        pic.line.width = Pt(0.75)
+    return pic
+
+
+def add_case_study_header(slide, idx_in_appendix, title, subtitle=None):
+    add_accent_bar(slide, Inches(0.5), Inches(0.45), height=Inches(0.55))
+    add_textbox(slide, Inches(0.75), Inches(0.32), Inches(2.0), Inches(0.4),
+                f"APPENDIX · {idx_in_appendix}", size=11, bold=True, color=ACCENT)
+    add_textbox(slide, Inches(0.75), Inches(0.65), Inches(12), Inches(0.5),
+                title, size=24, bold=True, color=TEXT)
+    if subtitle:
+        add_textbox(slide, Inches(0.75), Inches(1.05), Inches(12), Inches(0.35),
+                    subtitle, size=12, color=MUTED)
+
+
+def add_caption(slide, text, *, color=TEXT):
+    add_panel(slide, Inches(0.5), Inches(6.35), Inches(12.3), Inches(0.55))
+    add_textbox(slide, Inches(0.75), Inches(6.45), Inches(11.8), Inches(0.4),
+                text, size=13, color=color, align=PP_ALIGN.LEFT)
+
+
+def slide_appendix_divider(prs):
+    s = prs.slides.add_slide(prs.slide_layouts[6])
+    set_bg(s, prs)
+    # Big banner
+    add_textbox(s, Inches(0.5), Inches(2.0), Inches(12.3), Inches(0.5),
+                "APPENDIX", size=18, bold=True, color=ACCENT,
+                align=PP_ALIGN.CENTER)
+    add_textbox(s, Inches(0.5), Inches(2.55), Inches(12.3), Inches(1.2),
+                "Case study: /run builds webhooksig",
+                size=44, bold=True, color=TEXT, align=PP_ALIGN.CENTER)
+    add_textbox(s, Inches(0.5), Inches(3.8), Inches(12.3), Inches(0.5),
+                "Idea → merged PR in 30 m 13 s. Every stage. Real receipts.",
+                size=18, color=MUTED, align=PP_ALIGN.CENTER)
+
+    # Quick stats row
+    stats = [
+        ("30m 13s", "wall clock", ACCENT),
+        ("12", "agents invoked", WARN),
+        ("182", "tests written", ACCENT),
+        ("$0.05", "approx token cost", DANGER),
+    ]
+    x = 0.75
+    card_w = 2.95
+    for big, small, color in stats:
+        add_panel(s, Inches(x), Inches(4.8), Inches(card_w), Inches(1.2))
+        add_textbox(s, Inches(x), Inches(4.9), Inches(card_w), Inches(0.6),
+                    big, size=28, bold=True, color=color,
+                    align=PP_ALIGN.CENTER)
+        add_textbox(s, Inches(x), Inches(5.5), Inches(card_w), Inches(0.4),
+                    small, size=11, color=MUTED, align=PP_ALIGN.CENTER)
+        x += card_w + 0.1
+
+    add_textbox(s, Inches(0.5), Inches(6.4), Inches(12.3), Inches(0.4),
+                "Full screen recording available alongside this deck: "
+                "pptx_refs/Screen Recording 2026-05-22 at 10.51.37 AM.mov",
+                size=10, color=MUTED, align=PP_ALIGN.CENTER, font="Consolas")
+    add_notes(s, (
+        "Pause here. This is the pivot from 'here's the harness' to "
+        "'here's a real run of the harness, soup to nuts.'\n\n"
+        "What to say:\n"
+        "'The rest of the talk was about the harness. The rest of the deck is "
+        "what one run looks like in practice. Thirty minutes, twelve agents, "
+        "one merged PR, five cents in tokens. We're going to walk every stage "
+        "with the actual screenshots from that session.'\n\n"
+        "If you have time and the audience is engaged, mention you can also "
+        "play the full screen recording — it's in pptx_refs/ next to the deck. "
+        "Don't try to embed a 30 MB .mov in the slides; just have it ready in "
+        "a side window if asked."
+    ))
+
+
+def slide_cs_invocation(prs):
+    s = prs.slides.add_slide(prs.slide_layouts[6])
+    set_bg(s, prs)
+    add_case_study_header(s, "1 / 8",
+                          "Step 0–1: Invocation + interrogation",
+                          "From /run to a working pitch in two minutes")
+    left_img = prep_image("10.41.53", "01a-invoke")
+    right_img = prep_image("10.43.26", "01b-interrogator-pitch")
+    add_picture_fit(s, left_img, Inches(0.5), Inches(1.45),
+                    Inches(6.1), Inches(4.75))
+    add_picture_fit(s, right_img, Inches(6.75), Inches(1.45),
+                    Inches(6.1), Inches(4.75))
+    add_caption(s, "Left: /run skill confirmation.   "
+                   "Right: the interrogator's working pitch — webhooksig was born here.")
+    add_notes(s, (
+        "Two screenshots, two beats:\n\n"
+        "LEFT (10:41:53): 'This is what kicking off a run looks like — type /run, "
+        "Claude Code prompts you to allow the skill. That's the only friction in "
+        "the whole 30 minutes.'\n\n"
+        "RIGHT (10:43:26): 'A minute and a half later, the interrogator has "
+        "summarized the idea back to me. Note the prompt at the bottom — Is this "
+        "the right one-liner, or do you want to refine it? It will not draft a "
+        "spec until you confirm or correct.'\n\n"
+        "Optional aside: the model badge in the bottom-left switched from "
+        "Sonnet 4.6 to Opus 4.7 between these two screenshots. The skill "
+        "actually suggested the swap because Opus does deeper interrogation. "
+        "Small UX detail, but it tells you the harness is opinionated about "
+        "model choice per stage."
+    ))
+
+
+def slide_cs_spec(prs):
+    s = prs.slides.add_slide(prs.slide_layouts[6])
+    set_bg(s, prs)
+    add_case_study_header(s, "2 / 8",
+                          "Step 2: SPEC.md emerges",
+                          "The contract karen audits against, hours from now")
+    img = prep_image("10.43.59", "02-spec")
+    add_picture_fit(s, img, Inches(0.5), Inches(1.45),
+                    Inches(12.3), Inches(4.75))
+    add_caption(s, "Goals, non-goals, users, scope — drafted before a single source file is touched.")
+    add_notes(s, (
+        "Don't read the spec aloud. Let people scan it for ten seconds.\n\n"
+        "What to say:\n"
+        "'Every section you see here came out of the interrogator's Q&A. "
+        "Goals, non-goals, intended users, scope boundaries. This file becomes "
+        "the contract — karen, the auditor agent at the end of the pipeline, "
+        "literally diffs the implementation against this spec to decide PASS, "
+        "PARTIAL, or FAIL.'\n\n"
+        "Land this point: 'In raw vibe coding, the spec lives in chat history "
+        "and gets lost. Here, it's a file. You can read it, share it, and "
+        "the agents can re-read it whenever they drift.'"
+    ))
+
+
+def slide_cs_security(prs):
+    s = prs.slides.add_slide(prs.slide_layouts[6])
+    set_bg(s, prs)
+    add_case_study_header(s, "3 / 8",
+                          "Step 3: Security concerns, merged per app_type",
+                          "The threat-model story from slide 9 — in production form")
+    left_img = prep_image("10.48.07", "03a-security-concerns-1")
+    right_img = prep_image("10.48.33", "03b-security-concerns-2")
+    add_picture_fit(s, left_img, Inches(0.5), Inches(1.45),
+                    Inches(6.1), Inches(4.75))
+    add_picture_fit(s, right_img, Inches(6.75), Inches(1.45),
+                    Inches(6.1), Inches(4.75))
+    add_caption(s, "concern-resolver reads security/concerns/*.md and unions per declared app_type → SECURITY_CONCERNS.md.")
+    add_notes(s, (
+        "These two screenshots are SECURITY_CONCERNS.md, top half on the left, "
+        "bottom half on the right. Walk through what's on screen:\n\n"
+        "'The concern-resolver looked at the SPEC, looked at app_types declared "
+        "in CLAUDE.md, and produced this merged checklist. SR-1 is timing-safe "
+        "comparison. SR-2 is replay protection. SR-3 is no-secret-in-logs. "
+        "Every one of these has a triggered-by reason and a remediation hint.'\n\n"
+        "The key point: this happens BEFORE implementation. The architect agent "
+        "reads this file and bakes the mitigations into the design. The "
+        "security-reviewer at the end reads the SAME file to verify nothing "
+        "was missed. One checklist, three agents."
+    ))
+
+
+def slide_cs_architecture(prs):
+    s = prs.slides.add_slide(prs.slide_layouts[6])
+    set_bg(s, prs)
+    add_case_study_header(s, "4 / 8",
+                          "Step 4: ARCHITECTURE.md (plan-before-code)",
+                          "Trust boundary + HMAC call path, written before any source file")
+    left_img = prep_image("10.49.47", "04a-arch-system-context")
+    right_img = prep_image("10.50.42", "04b-arch-data-flow")
+    add_picture_fit(s, left_img, Inches(0.5), Inches(1.45),
+                    Inches(6.1), Inches(4.75))
+    add_picture_fit(s, right_img, Inches(6.75), Inches(1.45),
+                    Inches(6.1), Inches(4.75))
+    add_caption(s, "Left: system context with trust boundary.   Right: HMAC verify pseudocode — the algorithm settled before the code.")
+    add_notes(s, (
+        "Two halves of one architecture doc.\n\n"
+        "LEFT: system context diagram. Note the trust boundary — webhooksig "
+        "sits INSIDE the caller's request handler, after TLS termination, "
+        "before business logic. The architect agent drew this. ASCII art, "
+        "not Mermaid — because it has to render in any markdown viewer, "
+        "including git diff.\n\n"
+        "RIGHT: the data-flow section. Pseudocode for the call path through "
+        "verify_github and verify_stripe. This is the algorithm being settled "
+        "BEFORE any code is written. By the time the coder agent gets a task, "
+        "all of these decisions are pre-made.\n\n"
+        "Land it: 'Most agent runs go straight from spec to code. The architect "
+        "step is what stops the coder from re-deciding architecture in every "
+        "function it writes.'"
+    ))
+
+
+def slide_cs_parallel_coders(prs):
+    s = prs.slides.add_slide(prs.slide_layouts[6])
+    set_bg(s, prs)
+    add_case_study_header(s, "5 / 8",
+                          "Step 5: Parallel coders + advisor escalation",
+                          "Four coders concurrent. One hits an ambiguous edge — calls the advisor.")
+    left_img = prep_image("10.58.45", "05a-parallel-coders")
+    right_img = prep_image("10.59.11", "05b-advisor")
+    add_picture_fit(s, left_img, Inches(0.5), Inches(1.45),
+                    Inches(6.1), Inches(4.75))
+    add_picture_fit(s, right_img, Inches(6.75), Inches(1.45),
+                    Inches(6.1), Inches(4.75))
+    add_caption(s, "Left: four agents running in parallel.   Right: one of them consults the advisor on a header-length bound.")
+    add_notes(s, (
+        "LEFT: 'Four agents running in parallel — fixing test mismatches and "
+        "implementing the P2 module tier.' This is the orchestrator's "
+        "decomposition paying off — independent tasks fan out to independent "
+        "coders. Wall-clock for this phase: under five minutes.\n\n"
+        "RIGHT: this is the moment that justifies the advisor tool. The coder "
+        "hit an ambiguous spec edge — what's the right max_header_length bound? "
+        "Instead of guessing, it consulted the stronger advisor model. The "
+        "advisor reviewed the full transcript and confirmed the approach.\n\n"
+        "Key point: 'The advisor isn't a fallback for failure. It's a "
+        "second-opinion mechanism for decisions that have consequences. "
+        "The coder used it correctly here — at a branch point, before committing "
+        "to an interpretation.'"
+    ))
+
+
+def slide_cs_karen(prs):
+    s = prs.slides.add_slide(prs.slide_layouts[6])
+    set_bg(s, prs)
+    add_case_study_header(s, "6 / 8",
+                          "Karen + human-in-the-loop triage",
+                          "When the audit surfaces work outside scope, the human stays in control")
+    img = prep_image("11.01.12", "06-karen-triage")
+    add_picture_fit(s, img, Inches(0.5), Inches(1.45),
+                    Inches(12.3), Inches(4.75))
+    add_caption(s, "160 / 182 tests pass. 22 failures = pre-existing test bugs. Karen names the failure mode and proceeds. Human picked Option C.")
+    add_notes(s, (
+        "This is the slide where 'agents in the loop' becomes 'humans still in "
+        "the loop when it counts.'\n\n"
+        "Walk the screenshot:\n"
+        "  - pytest result: 160 passing, 22 failing\n"
+        "  - karen identifies: '22 failures — all pre-existing test bugs from "
+        "    the unit-test-writer (wrong kwargs, wrong provider expectations, "
+        "    test design mismatches)'\n"
+        "  - Karen presents options. The human picked Option C — accept the "
+        "    pre-existing failures, proceed.\n\n"
+        "What to say:\n"
+        "'Karen could have looped forever trying to fix unit-test-writer's bugs. "
+        "Instead, she recognized the failure pattern, escalated with options, "
+        "and let me make the call. This is the difference between an autonomous "
+        "agent that wastes 20 minutes and a harness that knows when to ask.'\n\n"
+        "Optional follow-up: the 22 pre-existing bugs got logged in PROBLEMS.md "
+        "and PLAN.md for a future run to address. Nothing got swept under the rug."
+    ))
+
+
+def slide_cs_scoreboard(prs):
+    s = prs.slides.add_slide(prs.slide_layouts[6])
+    set_bg(s, prs)
+    add_case_study_header(s, "7 / 8",
+                          "The final scoreboard",
+                          "Every stage's result, one screen, baked in 30 m 13 s")
+    img = prep_image("11.03.22", "07-scoreboard")
+    add_picture_fit(s, img, Inches(0.5), Inches(1.45),
+                    Inches(12.3), Inches(4.75))
+    add_caption(s, "TDD red phase · parallel + sequential coders · 22 pre-existing fails accepted · 2 medium security findings · 1 fixed, 1 documented · PR open.",
+                color=ACCENT)
+    add_notes(s, (
+        "This is the money shot. Don't talk over it for the first ten seconds — "
+        "let people read.\n\n"
+        "When you talk, hit the rows that matter:\n"
+        "  - 'TDD red phase: 182 tests written BEFORE implementation. That's "
+        "    the test-immutability hook earning its keep — agents wrote tests "
+        "    first, then code to make them pass.'\n"
+        "  - 'Parallel + sequential split: the orchestrator decided which work "
+        "    was safe to parallelize. P1/P2 groups (types, core, providers) in "
+        "    parallel. S1/S2 (cli, entrypoint) sequential because they depend "
+        "    on the others.'\n"
+        "  - 'Karen: PARTIAL. Why partial and not PASS? She flagged a "
+        "    .gitignore hiding src/, plus a provider-unknown design note. "
+        "    Both legitimate, both reviewable.'\n"
+        "  - 'Security review: two medium items. SR-1 (UnicodeDecodeError in "
+        "    Stripe) fixed in the same run. SR-2 (secret visible in process "
+        "    arg list) documented in PLAN.md for follow-up. Neither shipped "
+        "    silently.'\n\n"
+        "Land the closer:\n"
+        "'30 minutes, 13 seconds. Two commits, PR open. Real working library. "
+        "This is what the green column of slide 12 actually looks like in "
+        "wall-clock time.'"
+    ))
+
+
+def slide_cs_jsonl(prs):
+    s = prs.slides.add_slide(prs.slide_layouts[6])
+    set_bg(s, prs)
+    add_case_study_header(s, "8 / 8",
+                          "Receipts under the hood",
+                          "The JSONL audit trail from slide 8, in the wild")
+    left_img = prep_image("10.44.33", "08a-jsonl-1")
+    right_img = prep_image("10.46.30", "08b-jsonl-2")
+    add_picture_fit(s, left_img, Inches(0.5), Inches(1.45),
+                    Inches(6.1), Inches(4.75))
+    add_picture_fit(s, right_img, Inches(6.75), Inches(1.45),
+                    Inches(6.1), Inches(4.75))
+    add_caption(s, "log_tool_call.sh in action: every Read, Bash, Edit, Agent spawn, web fetch — append-only JSONL.")
+    add_notes(s, (
+        "This slide exists for the skeptics. On slide 8 you claimed an audit "
+        "trail. Here it is.\n\n"
+        "What to say:\n"
+        "'These are excerpts from sessions/20260520-2116/session_log.json. Every "
+        "tool call the agents made during the run got appended to this file. "
+        "Bash commands, file reads, file writes, sub-agent invocations, "
+        "everything. When something goes weird in a run — and things do go "
+        "weird — this is the file you grep.'\n\n"
+        "If asked what you actually do with the log:\n"
+        "  - Replay a run mentally without re-running it\n"
+        "  - Find which agent touched a specific file\n"
+        "  - Measure how often a given tool gets called\n"
+        "  - Catch agents trying things they shouldn't (the hooks block most, "
+        "    but the log shows the attempt)\n\n"
+        "If the audience is non-technical, you can soft-pedal this slide: "
+        "'For the engineers in the room — yes, every action is logged. Moving on.' "
+        "and skip the deep-dive."
+    ))
+
+
 # ---------- assemble ----------
 
 def build(output_path: Path) -> Path:
@@ -854,6 +1229,16 @@ def build(output_path: Path) -> Path:
         slide_comparison,
         slide_demo,
         slide_qa,
+        # appendix
+        slide_appendix_divider,
+        slide_cs_invocation,
+        slide_cs_spec,
+        slide_cs_security,
+        slide_cs_architecture,
+        slide_cs_parallel_coders,
+        slide_cs_karen,
+        slide_cs_scoreboard,
+        slide_cs_jsonl,
     ]
 
     total = len(builders)
