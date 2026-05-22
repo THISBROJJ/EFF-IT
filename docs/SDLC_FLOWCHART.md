@@ -151,6 +151,9 @@ flowchart LR
 
         H5["session-autocommit.sh\nPostToolUse — Write on PROGRESS_TRACKER.md"]:::hook
         H5 --> AUTOCOMMIT["stages all changes + auto-commits\nmessage derived from last ## heading"]:::guard
+
+        H6["karen post-commit audit\nPostToolUse agent — Bash 'git commit'"]:::hook
+        H6 --> KAREN_AUDIT["spawns karen to diff HEAD\nflags shortcuts / coverage gaps in transcript"]:::guard
     end
 ```
 
