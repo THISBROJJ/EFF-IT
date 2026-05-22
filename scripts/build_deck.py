@@ -164,6 +164,57 @@ def add_notes(slide, notes):
     notes_tf.text = notes
 
 
+def add_pill(slide, left, top, height, label, *, color=ACCENT, fill=PANEL,
+             padding=0.25, size=14, bold=True):
+    """A rounded chip with auto-sized width based on label length."""
+    char_w = size * 0.075  # rough em width estimate in inches
+    width = Inches(char_w * len(label) + padding * 2)
+    pill = slide.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE,
+                                    left, top, width, height)
+    pill.fill.solid()
+    pill.fill.fore_color.rgb = fill
+    pill.line.color.rgb = color
+    pill.line.width = Pt(1.25)
+    pill.shadow.inherit = False
+    tf = pill.text_frame
+    tf.margin_left = Inches(padding)
+    tf.margin_right = Inches(padding)
+    tf.margin_top = Inches(0.04)
+    tf.margin_bottom = Inches(0.04)
+    p = tf.paragraphs[0]
+    p.alignment = PP_ALIGN.CENTER
+    r = p.add_run()
+    r.text = label
+    r.font.name = "Segoe UI"
+    r.font.size = Pt(size)
+    r.font.bold = bold
+    r.font.color.rgb = color
+    return pill, width
+
+
+def add_card(slide, left, top, width, height, *,
+             accent_color=ACCENT, title=None, body_lines=None,
+             title_size=16, body_size=13):
+    """Reusable card: panel with a colored top bar + title + body lines."""
+    add_panel(slide, left, top, width, height)
+    bar = slide.shapes.add_shape(MSO_SHAPE.RECTANGLE, left, top, width, Inches(0.1))
+    bar.fill.solid()
+    bar.fill.fore_color.rgb = accent_color
+    bar.line.fill.background()
+    bar.shadow.inherit = False
+    if title:
+        add_textbox(slide, left + Inches(0.2), top + Inches(0.18),
+                    width - Inches(0.4), Inches(0.4),
+                    title, size=title_size, bold=True, color=accent_color)
+    if body_lines:
+        y_off = 0.65
+        for line in body_lines:
+            add_textbox(slide, left + Inches(0.25), top + Inches(y_off),
+                        width - Inches(0.5), Inches(0.45),
+                        f"•  {line}", size=body_size, color=TEXT)
+            y_off += 0.4
+
+
 def add_table(slide, left, top, width, height, rows, *,
               header=True, col_widths=None, font_size=14):
     nrows = len(rows)
@@ -869,6 +920,313 @@ def slide_qa(prs):
     ))
 
 
+# ---------- v2 builders: revised slides 1-4 ----------
+
+
+def slide_title_v2(prs):
+    s = prs.slides.add_slide(prs.slide_layouts[6])
+    set_bg(s, prs)
+    add_textbox(s, Inches(0.5), Inches(2.0), Inches(12.3), Inches(1.5),
+                "EFF-IT", size=96, bold=True, color=ACCENT,
+                align=PP_ALIGN.CENTER)
+    # working-name chip directly below the wordmark
+    add_rich_paragraphs(s, Inches(0.5), Inches(3.45), Inches(12.3), Inches(0.5), [
+        [("(working name)", {"size": 16, "italic": True, "color": MUTED})],
+    ]).text_frame.paragraphs[0].alignment = PP_ALIGN.CENTER
+    # Subtitle moved down a touch to make room for the chip
+    add_textbox(s, Inches(0.5), Inches(4.05), Inches(12.3), Inches(0.6),
+                "A Claude Code harness for vibe-driven software delivery",
+                size=22, color=TEXT, align=PP_ALIGN.CENTER)
+    add_panel(s, Inches(2.5), Inches(5.0), Inches(8.3), Inches(1.0))
+    add_textbox(s, Inches(2.5), Inches(5.15), Inches(8.3), Inches(0.7),
+                "“You know what? EFF-IT. Let the agents handle it.”",
+                size=20, color=ACCENT, align=PP_ALIGN.CENTER)
+    add_textbox(s, Inches(0.5), Inches(6.7), Inches(12.3), Inches(0.4),
+                "lizhang  ·  2026", size=12, color=MUTED,
+                align=PP_ALIGN.CENTER)
+    add_notes(s, (
+        "Open by saying the name out loud, then own the joke:\n"
+        "'I'm introducing EFF-IT — sorry, it's a working name.'\n"
+        "Pause. Let people laugh or roll eyes. The (working name) tag is "
+        "right there on the slide so you don't have to belabor it.\n\n"
+        "Then the substance:\n"
+        "'This is a scaffold I built on top of Claude Code. It takes the "
+        "vibe-coding experience — describe what you want, let the AI build it — "
+        "and wraps it with the structure you'd normally have to remember to add "
+        "yourself: specs, audits, security review, checkpoints, the works.'\n\n"
+        "Don't dive into architecture yet. The next slide defines vibe coding "
+        "before we critique it."
+    ))
+
+
+def slide_what_is_vibe_v2(prs):
+    s = prs.slides.add_slide(prs.slide_layouts[6])
+    set_bg(s, prs)
+    add_slide_header(s, "What is \"vibe coding\"?")
+
+    # Definition panel
+    add_panel(s, Inches(0.5), Inches(1.5), Inches(12.3), Inches(1.0))
+    add_rich_paragraphs(s, Inches(0.8), Inches(1.6), Inches(11.7), Inches(0.8), [
+        [("Many definitions, ", {"size": 17}),
+         ("variable amounts of rigor.", {"size": 17, "italic": True, "color": WARN}),
+         ("  The shape that's stuck:", {"size": 17})],
+        [("an AI coding agent  +  your idea in plain text.  Nothing else required.",
+          {"size": 16, "color": ACCENT, "bold": True})],
+    ])
+
+    # Promise callout
+    add_panel(s, Inches(0.5), Inches(2.7), Inches(12.3), Inches(0.9), color=PANEL)
+    add_rich_paragraphs(s, Inches(0.8), Inches(2.85), Inches(11.7), Inches(0.7), [
+        [("The promise:  ", {"size": 18, "bold": True, "color": ACCENT}),
+         ("ship features at the speed of thought. You don't need to know how it works.",
+          {"size": 18, "color": TEXT})],
+    ])
+
+    # Honest caveat
+    add_panel(s, Inches(0.5), Inches(3.8), Inches(12.3), Inches(2.6))
+    bar = s.shapes.add_shape(MSO_SHAPE.RECTANGLE, Inches(0.5), Inches(3.8),
+                              Inches(0.1), Inches(2.6))
+    bar.fill.solid()
+    bar.fill.fore_color.rgb = WARN
+    bar.line.fill.background()
+    bar.shadow.inherit = False
+    add_textbox(s, Inches(0.8), Inches(3.95), Inches(11.7), Inches(0.5),
+                "Great for prototyping.  Fragile beyond it.",
+                size=20, bold=True, color=WARN)
+    add_textbox(s, Inches(0.8), Inches(4.45), Inches(11.7), Inches(0.4),
+                "Without guardrails, quality standards, tests, and rigor, raw vibe coding accrues:",
+                size=14, color=MUTED)
+    # pill row of named costs
+    pill_labels = [
+        "Technical debt",
+        "Strange design choices",
+        "Inconsistent naming",
+        "Duplicate / dead logic",
+    ]
+    x = 0.8
+    for label in pill_labels:
+        _, used_w = add_pill(s, Inches(x), Inches(5.05), Inches(0.55),
+                              label, color=WARN, fill=BG, size=13)
+        x += used_w.inches + 0.2
+    add_textbox(s, Inches(0.8), Inches(5.85), Inches(11.7), Inches(0.4),
+                "That's the gap EFF-IT is built to close.",
+                size=14, color=ACCENT)
+    add_notes(s, (
+        "Anchor the definition by saying it like the slide reads:\n"
+        "'There are many definitions of vibe coding, with variable amounts of "
+        "rigor. The shape that's stuck is the simple one: an AI coding agent "
+        "plus your idea in plain text. That's the whole input.'\n\n"
+        "Sell the promise without irony first:\n"
+        "'The pitch is real — ship features at the speed of thought. You don't "
+        "need to know how the code works to get something running.'\n\n"
+        "Then pivot. Land the WARN panel hard:\n"
+        "'It's great for prototyping. It's fragile beyond that. Without "
+        "guardrails, you accrue technical debt, strange design choices, "
+        "inconsistent naming, duplicate or dead logic. The code runs. It also "
+        "rots.'\n\n"
+        "Closing line is the bridge to slide 3: 'That's the gap EFF-IT is "
+        "built to close.'"
+    ))
+
+
+def slide_problem_v2(prs):
+    s = prs.slides.add_slide(prs.slide_layouts[6])
+    set_bg(s, prs)
+    add_slide_header(s, "The problem with raw vibe coding",
+                     "Four failure modes that show up in every long session")
+
+    # 2x2 grid of themed cards
+    card_w = Inches(6.05)
+    card_h = Inches(2.15)
+    gap = 0.2
+    col1_x = Inches(0.5)
+    col2_x = Inches(0.5 + 6.05 + gap)
+    row1_y = Inches(1.5)
+    row2_y = Inches(1.5 + 2.15 + gap)
+
+    add_card(s, col1_x, row1_y, card_w, card_h,
+             accent_color=DANGER, title="CONTEXT LOSS",
+             body_lines=[
+                 "Forgets what it was building mid-feature",
+                 "Context window overflows + compaction kicks in",
+                 "Re-explores the codebase every new session",
+             ])
+    add_card(s, col2_x, row1_y, card_w, card_h,
+             accent_color=WARN, title="QUALITY DRIFT",
+             body_lines=[
+                 "Tests get “adjusted” to pass (if written at all)",
+                 "No audit that the feature actually matches the ask",
+                 "No planning, architecture, or best practices baked in",
+             ])
+    add_card(s, col1_x, row2_y, card_w, card_h,
+             accent_color=WARN, title="PROCESS DRIFT",
+             body_lines=[
+                 "Scope creeps silently mid-build",
+                 "“Claude, what do you think?” → instant hype",
+                 "New idea lands in the plan with no rigor",
+             ])
+    add_card(s, col2_x, row2_y, card_w, card_h,
+             accent_color=DANGER, title="NO MEMORY",
+             body_lines=[
+                 "Silent assumptions, re-made every session",
+                 "No record of WHY anything was chosen",
+                 "Secrets hardcoded → land in commits",
+             ])
+
+    # Bottom pull-quote (the scope-creep anecdote)
+    add_panel(s, Inches(0.5), Inches(6.15), Inches(12.3), Inches(0.85))
+    add_rich_paragraphs(s, Inches(0.8), Inches(6.27), Inches(11.7), Inches(0.65), [
+        [("“", {"size": 22, "color": ACCENT, "bold": True}),
+         ("I ask Claude what it thinks, it hypes me up like I'm the next best "
+          "thing in the world, and then it gets added to the plan mid-session.",
+          {"size": 14, "italic": True, "color": TEXT}),
+         ("”", {"size": 22, "color": ACCENT, "bold": True})],
+    ])
+    add_notes(s, (
+        "Four failure modes, not five problems — the grouping matters. "
+        "Walk each card briefly:\n\n"
+        "CONTEXT LOSS: 'Sessions die. The window fills. When you come back, "
+        "Claude re-explores everything from scratch — and the assumptions it "
+        "makes the second time aren't the same as the first.'\n\n"
+        "QUALITY DRIFT: 'Tests get adjusted to make the agent's code pass — "
+        "if tests get written at all. There's no audit gate at the end. No "
+        "one's asking did we build the right thing?'\n\n"
+        "PROCESS DRIFT (this is the live one — share the anecdote):\n"
+        "'This is the one that happens to me most. I'm in the middle of a "
+        "build, an idea pops into my head, I ask Claude what it thinks. "
+        "It hypes me up — yes, brilliant, let's add it — and now there's "
+        "a whole new feature in the plan with zero design thought. "
+        "Just because it sounded cool to do.'\n\n"
+        "Read the pull-quote at the bottom — it lands harder when you say "
+        "it the same way it reads.\n\n"
+        "NO MEMORY: 'Silent assumptions every session. No record of WHY any "
+        "choice was made. And the classic — credentials hardcoded as a "
+        "convenience, ending up in a public commit.'\n\n"
+        "Bridge to slide 4: 'That's the challenge EFF-IT is built to resolve.'"
+    ))
+
+
+def slide_what_is_eff_it_v2(prs):
+    s = prs.slides.add_slide(prs.slide_layouts[6])
+    set_bg(s, prs)
+    add_slide_header(s, "What EFF-IT is",
+                     "A scaffold wrapped around your vibe-coding session")
+
+    # Subtitle line under the header explaining the shape
+    add_textbox(s, Inches(0.5), Inches(1.5), Inches(12.3), Inches(0.5),
+                "Turns it into a workflow that is:",
+                size=15, color=MUTED, align=PP_ALIGN.CENTER)
+
+    # Five pill chips — the five adjectives
+    pill_labels = ["Deterministic", "Rigorous", "Spec-driven",
+                   "Test-driven", "Observable"]
+    # measure total width first to center the row
+    char_w = 18 * 0.075
+    total_w = sum(char_w * len(lbl) + 0.5 for lbl in pill_labels) + 0.25 * (len(pill_labels) - 1)
+    x = (13.333 - total_w) / 2
+    for label in pill_labels:
+        _, used_w = add_pill(s, Inches(x), Inches(2.1), Inches(0.65),
+                              label, color=ACCENT, fill=PANEL, size=18,
+                              padding=0.25)
+        x += used_w.inches + 0.25
+
+    # Stack banner
+    add_panel(s, Inches(0.5), Inches(3.2), Inches(12.3), Inches(1.4))
+    bar = s.shapes.add_shape(MSO_SHAPE.RECTANGLE, Inches(0.5), Inches(3.2),
+                              Inches(0.1), Inches(1.4))
+    bar.fill.solid()
+    bar.fill.fore_color.rgb = ACCENT
+    bar.line.fill.background()
+    bar.shadow.inherit = False
+    add_textbox(s, Inches(0.8), Inches(3.35), Inches(11.7), Inches(0.5),
+                "Bash  ·  Markdown  ·  GitHub Actions",
+                size=22, bold=True, color=ACCENT, mono=True)
+    add_textbox(s, Inches(0.8), Inches(3.9), Inches(11.7), Inches(0.6),
+                "No runtime to install. Stack-agnostic — Python, TypeScript, Go, anything. "
+                "It targets the host project's stack without interfering.",
+                size=14, color=TEXT)
+
+    # Compact "where it lives" reference
+    add_panel(s, Inches(0.5), Inches(4.85), Inches(12.3), Inches(1.85))
+    add_textbox(s, Inches(0.8), Inches(4.95), Inches(11.7), Inches(0.4),
+                "WHERE IT LIVES", size=11, bold=True, color=MUTED)
+    lives = [
+        ("  .claude/commands/", "slash workflows  —  /run, /fast-lane, /resume"),
+        ("  .claude/agents/", "12 single-purpose subagents"),
+        ("  .claude/hooks/", "lifecycle scripts  —  logging, secrets, test-immutability"),
+        ("  sessions/<run_id>/", "self-contained per-run artifacts + checkpoint"),
+        ("  security/profiles/", "app-type threat models loaded per run"),
+    ]
+    y = 5.35
+    for path, desc in lives:
+        add_textbox(s, Inches(0.8), Inches(y), Inches(4.0), Inches(0.3),
+                    path, size=12, bold=True, color=ACCENT, mono=True)
+        add_textbox(s, Inches(4.9), Inches(y), Inches(7.8), Inches(0.3),
+                    desc, size=12, color=TEXT)
+        y += 0.27
+    add_notes(s, (
+        "Open by stating the shape, not the structure:\n"
+        "'EFF-IT puts a scaffold on top of the vibe-coding session. The "
+        "session itself stays — you still describe what you want, the agent "
+        "still builds it. What changes is the workflow it runs inside.'\n\n"
+        "Walk the five pill chips. Don't dwell on each — they're a list:\n"
+        "'Deterministic, rigorous, spec-driven, test-driven, observable. "
+        "Those five words are what's different about the runs you'll see "
+        "later in this deck.'\n\n"
+        "Now the implementation reality:\n"
+        "'The scaffold itself is just Bash, Markdown, and GitHub Actions. "
+        "There's no runtime to install. Whether you're using Python, "
+        "TypeScript, Go, or anything else for the project itself, EFF-IT "
+        "doesn't interfere — it targets whatever stack your project already uses.'\n\n"
+        "The directory list at the bottom is reference, not narration. "
+        "Point at it once: 'Five directories. We'll come back to each.' "
+        "Move on."
+    ))
+
+
+# ---------- comparison: originals (slides 1-4 before revision) ----------
+
+
+def slide_originals_divider(prs):
+    s = prs.slides.add_slide(prs.slide_layouts[6])
+    set_bg(s, prs)
+    add_textbox(s, Inches(0.5), Inches(2.0), Inches(12.3), Inches(0.5),
+                "REFERENCE", size=18, bold=True, color=WARN,
+                align=PP_ALIGN.CENTER)
+    add_textbox(s, Inches(0.5), Inches(2.55), Inches(12.3), Inches(1.2),
+                "Slides 1–4, original versions",
+                size=40, bold=True, color=TEXT, align=PP_ALIGN.CENTER)
+    add_textbox(s, Inches(0.5), Inches(3.8), Inches(12.3), Inches(0.5),
+                "Kept for comparison against the revised versions at the top of the deck.",
+                size=16, color=MUTED, align=PP_ALIGN.CENTER)
+
+    # Map of what changed
+    add_panel(s, Inches(1.5), Inches(4.6), Inches(10.3), Inches(2.3))
+    add_textbox(s, Inches(1.8), Inches(4.75), Inches(9.7), Inches(0.4),
+                "WHAT CHANGED", size=12, bold=True, color=ACCENT)
+    changes = [
+        ("Slide 1", "Added (working name) tag under the wordmark"),
+        ("Slide 2", "Honest definition + named cost pills (tech debt, naming, dead logic…)"),
+        ("Slide 3", "Restructured into 4 themed cards + scope-creep pull-quote"),
+        ("Slide 4", "Lead with 5 adjectives, not directory structure"),
+    ]
+    y = 5.2
+    for label, desc in changes:
+        add_textbox(s, Inches(1.8), Inches(y), Inches(1.4), Inches(0.35),
+                    label, size=13, bold=True, color=WARN)
+        add_textbox(s, Inches(3.3), Inches(y), Inches(8.2), Inches(0.35),
+                    desc, size=13, color=TEXT)
+        y += 0.4
+    add_notes(s, (
+        "Skip this slide in live delivery — it's reference only.\n\n"
+        "If anyone asks why something changed between drafts, this is the "
+        "summary. The next four slides are the originals verbatim from the "
+        "first draft of the deck, kept for direct comparison.\n\n"
+        "If presenting from this deck for review (rather than to an "
+        "audience), this is the divider to land on and pivot from."
+    ))
+
+
 # ---------- appendix: case study (webhooksig run) ----------
 
 
@@ -1215,10 +1573,11 @@ def build(output_path: Path) -> Path:
     prs.slide_height = Inches(7.5)
 
     builders = [
-        slide_title,
-        slide_what_is_vibe,
-        slide_problem,
-        slide_what_is_eff_it,
+        # main deck — v2 versions for slides 1-4
+        slide_title_v2,
+        slide_what_is_vibe_v2,
+        slide_problem_v2,
+        slide_what_is_eff_it_v2,
         slide_entry_points,
         slide_pipeline,
         slide_agents,
@@ -1229,7 +1588,7 @@ def build(output_path: Path) -> Path:
         slide_comparison,
         slide_demo,
         slide_qa,
-        # appendix
+        # case-study appendix
         slide_appendix_divider,
         slide_cs_invocation,
         slide_cs_spec,
@@ -1239,6 +1598,12 @@ def build(output_path: Path) -> Path:
         slide_cs_karen,
         slide_cs_scoreboard,
         slide_cs_jsonl,
+        # originals kept for comparison
+        slide_originals_divider,
+        slide_title,
+        slide_what_is_vibe,
+        slide_problem,
+        slide_what_is_eff_it,
     ]
 
     total = len(builders)
