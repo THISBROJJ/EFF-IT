@@ -105,7 +105,6 @@ optional supporting files (`references/`, `scripts/`, `tests/`).
 | `git-pr` | `/git-pr` or model-matched | Creates a GitHub PR with structured body |
 | `pr-decomposition` | `/pr-decomposition` or model-matched | Splits a large diff into atomic, independently-mergeable PRs |
 | `completion-auditor` | `/completion-auditor` or model-matched | Audits a "done" claim against the original request |
-| `secrets-check` | `/secrets-check` or model-matched | Scans the repo for hard-coded secrets |
 | `claude-skills-installer` | model-matched | Installs/uninstalls/lists skills from the catalog |
 | `claude-skills-catalog-manager` | model-matched | Manages the skills catalog (contribute, promote, deprecate) |
 

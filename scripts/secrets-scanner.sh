@@ -22,7 +22,6 @@ EXCLUDE=(
   --exclude-dir=build
   --exclude-dir=tests
   --exclude-dir=docs
-  --exclude-dir=secrets-check
   '--exclude=secrets-scanner.sh'
   '--exclude=*.lock'
   '--exclude=*.sum'
@@ -178,5 +177,5 @@ echo ""
 printf '%s\n' "$FINDINGS"
 echo ""
 echo "Remove or rotate any exposed credentials before committing."
-echo "For full §1-§39 coverage including keyword/context patterns, run /secrets-check."
+echo "For broader coverage including keyword/context patterns, install the secrets-check skill from the Claude Skills Catalog."
 exit 1
