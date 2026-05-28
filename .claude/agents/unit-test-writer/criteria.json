@@ -8,11 +8,11 @@
     {
       "id": "unit-test-writer-02",
       "description": "Test file naming follows language conventions from naming-conventions.md",
-      "check": "Every new test file created must conform to the language-appropriate convention defined in .claude/commands/unit-test-writer/naming-conventions.md: JS/TS (Jest/Vitest) → '<name>.test.{js,ts,jsx,tsx}' colocated with the source or in '__tests__/'; Python (pytest) → 'test_<name>.py' under 'tests/'; Go → '<name>_test.go' in the same package directory as the source. A test file whose name does not match the detected language's pattern is a FAIL of this criterion."
+      "check": "Every new test file created must conform to the language-appropriate convention defined in .claude/skills/unit-test-writer/references/naming-conventions.md: JS/TS (Jest/Vitest) → '<name>.test.{js,ts,jsx,tsx}' colocated with the source or in '__tests__/'; Python (pytest) → 'test_<name>.py' under 'tests/'; Go → '<name>_test.go' in the same package directory as the source. A test file whose name does not match the detected language's pattern is a FAIL of this criterion."
     },
     {
       "id": "unit-test-writer-03",
-      "description": "Coverage threshold is verified after writing tests using scripts in .claude/commands/unit-test-writer/scripts/",
+      "description": "Coverage threshold is verified after writing tests using scripts in .claude/skills/unit-test-writer/scripts/",
       "check": "The report must include a coverage section showing results from running the coverage command and checking against the threshold via check-threshold.sh. The coverage results must list each file touched with pass/fail indicator against the threshold. A report that completes test-writing without a coverage check is a FAIL of this criterion."
     },
     {

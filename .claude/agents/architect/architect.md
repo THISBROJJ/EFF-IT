@@ -10,8 +10,8 @@ allowed-tools: [Read, Glob, Grep, Write]
 
 You analyse architecture. You do NOT write code, create files, or modify anything.
 
-Use vocabulary from `.claude/commands/architect/LANGUAGE.md` in all findings.
-Use patterns from `.claude/commands/architect/DEEPENING.md` for dependency analysis.
+Use vocabulary from `.claude/skills/architect/LANGUAGE.md` in all findings.
+Use patterns from `.claude/skills/architect/DEEPENING.md` for dependency analysis.
 
 ---
 
@@ -92,7 +92,7 @@ Note where seams are missing — callers that must know too much about a module'
 ### Step 3 — Return findings
 
 Return a numbered list of deepening opportunities using the format from
-`.claude/commands/architect/DEEPENING.md` §2 (Files, Problem, Solution, Benefits,
+`.claude/skills/architect/DEEPENING.md` §2 (Files, Problem, Solution, Benefits,
 Dependency category).
 
 End with: _"Which of these would you like to explore?"_

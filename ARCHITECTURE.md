@@ -13,6 +13,7 @@ in `.claude/` and `sessions/`; your actual project source goes in `src/`, `tests
   hooks/              — shell scripts wired to Claude Code lifecycle events
   agents/             — subagent definitions (markdown + YAML frontmatter)
   commands/           — slash-command workflows invoked interactively
+  skills/             — reusable capability bundles (model-triggered or user-typed)
 security/
   profiles/           — app-type threat model profiles (loaded by concern-resolver)
   concerns/           — trigger-based concern definitions (scanned per-run)
@@ -82,14 +83,31 @@ and tools in a defined sequence. Live in `.claude/commands/` as flat `.md` files
 |---|---|---|
 | `implementation-loop` | (invoked by run/fast-lane) | Spawns coders, runs tests, cycles until all tests pass or max iterations reached |
 | `idea-interrogator` | `/idea-interrogator` | Socratic interview loop until the problem is fully specified |
-| `spec-drafter` | `/spec-drafter` | Drafts PRD, technical spec, design doc, or Tessl spec from conversation context |
-| `architect` | `/architect` | Surfaces refactor opportunities; may write ADRs and update `ARCHITECTURE.md` |
-| `git-branch` | `/git-branch` | Creates and names branches following trunk-based conventions |
-| `git-commit` | `/git-commit` | Stages and commits with a well-formed Conventional Commit message |
-| `git-merge` | `/git-merge` | Resolves merge/rebase conflicts interactively |
-| `git-pr` | `/git-pr` | Creates a GitHub PR with structured body |
-| `unit-test-writer` | `/unit-test-writer` | Generates unit tests targeting ≥90% coverage |
-| `pr-decomposition` | `/pr-decomposition` | Splits a large diff into atomic, independently-mergeable PRs |
+| `evaluate-run` | `/evaluate-run [run_id]` | Scores a completed pipeline run by running `agent-evaluator` against each agent trace |
+
+---
+
+## Skills
+
+Skills are reusable capability bundles. Unlike commands, they can be invoked two ways:
+the model auto-matches a skill's description against the user's request, **or** the user
+types `/<skill-name>` to invoke explicitly. Live in `.claude/skills/<name>/SKILL.md` with
+optional supporting files (`references/`, `scripts/`, `tests/`).
+
+| Skill | Trigger | What it does |
+|---|---|---|
+| `spec-drafter` | `/spec-drafter` or model-matched | Drafts PRD, technical spec, design doc, or Tessl spec from conversation context |
+| `architect` | `/architect` or model-matched | Surfaces refactor opportunities; may write ADRs and update `ARCHITECTURE.md` |
+| `unit-test-writer` | `/unit-test-writer` or model-matched | Generates unit tests targeting ≥90% coverage |
+| `git-branch` | `/git-branch` or model-matched | Creates and names branches following trunk-based conventions |
+| `git-commit` | `/git-commit` or model-matched | Stages and commits with a well-formed Conventional Commit message |
+| `git-merge` | `/git-merge` or model-matched | Resolves merge/rebase conflicts interactively |
+| `git-pr` | `/git-pr` or model-matched | Creates a GitHub PR with structured body |
+| `pr-decomposition` | `/pr-decomposition` or model-matched | Splits a large diff into atomic, independently-mergeable PRs |
+| `completion-auditor` | `/completion-auditor` or model-matched | Audits a "done" claim against the original request |
+| `secrets-check` | `/secrets-check` or model-matched | Scans the repo for hard-coded secrets |
+| `claude-skills-installer` | model-matched | Installs/uninstalls/lists skills from the catalog |
+| `claude-skills-catalog-manager` | model-matched | Manages the skills catalog (contribute, promote, deprecate) |
 
 ---
 

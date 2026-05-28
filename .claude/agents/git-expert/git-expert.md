@@ -24,10 +24,10 @@ follow its protocol in full.
 
 | User says | Read this skill |
 |---|---|
-| commit, stage, what should my message be | `.claude/commands/git-commit.md` |
-| create branch, what to name, checkout | `.claude/commands/git-branch.md` |
-| merge, merge conflict, resolve conflict | `.claude/commands/git-merge.md` |
-| create PR, open pull request, draft PR | `.claude/commands/git-pr.md` |
+| commit, stage, what should my message be | `.claude/skills/git-commit/SKILL.md` |
+| create branch, what to name, checkout | `.claude/skills/git-branch/SKILL.md` |
+| merge, merge conflict, resolve conflict | `.claude/skills/git-merge/SKILL.md` |
+| create PR, open pull request, draft PR | `.claude/skills/git-pr/SKILL.md` |
 
 You may chain operations (e.g., branch → commit → PR): Read each
 skill file in sequence and execute them in order.

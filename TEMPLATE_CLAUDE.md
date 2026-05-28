@@ -1,11 +1,13 @@
 # CLAUDE.md
 
+> Template for projects adopting this Claude Code harness. Replace every `<…>` placeholder with values for your project, then delete this blockquote.
+
 ## 1. Project overview
 
-**Name:** EFF-IT (Feature Implementation Toolkit)
-**Purpose:** A Claude Code harness — reusable scaffold of hooks, agents, and commands that wraps any software project with an AI-assisted development workflow.
-**Stack:** Bash / Markdown / GitHub Actions — no application runtime; the harness targets whatever stack the host project uses.
-**Primary entry point:** `.claude/commands/run.md` (full pipeline), `.claude/commands/fast-lane.md` (skip spec), `.claude/commands/resume.md` (resume from checkpoint)
+**Name:** `<project name>`
+**Purpose:** `<one-sentence description of what this project does>`
+**Stack:** `<languages, frameworks, runtimes>`
+**Primary entry point:** `<path to main entry — e.g. src/index.ts, cmd/server/main.go>`
 
 ---
 
@@ -13,18 +15,15 @@
 
 `git-commit-scope.sh` automatically injects `git diff --stat` before any `git commit` command — verify the scope looks right before proceeding.
 
-No test command yet (`src/` is empty). When the host project adds a stack, update this section with the actual test runner.
+Run the project's test suite before committing: `<test command — e.g. npm test, pytest, go test ./...>`.
 
 ---
 
 ## 3. Build & run
 
-This repo is a harness, not an application. There is nothing to install or run directly.
-
-To use it as a scaffold for a new project:
-1. Copy `.claude/`, `sessions/`, `tests/`, `scripts/`, and `.github/` into the target repo.
-2. Update `CLAUDE.md` and `ARCHITECTURE.md` for the new project.
-3. Run `/run` to start the full pipeline.
+`<install command — e.g. npm install, pip install -r requirements.txt>`
+`<build command, if any>`
+`<run command — e.g. npm run dev, python -m app>`
 
 ---
 
@@ -45,12 +44,27 @@ Never commit `.env` files. Use `.env.local` (gitignored) or a secrets manager fo
 
 ---
 
-## 6. Agent and command constraints
+## 6. Agent, command, and skill constraints
+
+Three surfaces, three roles. Each capability lives in exactly one.
+
+| Surface | Invoked by | Lives in | Use for |
+|---|---|---|---|
+| Command | User typing `/<name>` | `.claude/commands/` | Workflow orchestrators that manage other agents or pause for user input (e.g. `/run`, `/fast-lane`, `/resume`, `/evaluate-run`, `/idea-interrogator`, `/implementation-loop`) |
+| Skill | User typing `/<name>` **or** model auto-match against the description | `.claude/skills/<name>/` | Reusable bounded capabilities with a clear input/output (e.g. `spec-drafter`, `architect`, `git-*`, `unit-test-writer`, `pr-decomposition`) |
+| Agent | Spawned programmatically via the `Agent` tool by a command/skill | `.claude/agents/<name>/` | Pipeline workers that do one job and return a structured result |
+
+**Surface-choice rule:** workflow orchestrators → commands; reusable capabilities → skills.
+Deciding test: does it manage other agents or pause for user input? Command. Single bounded
+capability with a clear input/output? Skill. If a capability needs both auto-invocation and
+a user-typed entrypoint, make it a skill — skills are already user-invocable as `/<name>`.
+
+**Other constraints:**
 
 - Agent prompts stay under 200 lines.
 - Each agent does one thing — if the description needs "and", split it.
-- Commands (`/run`, `/fast-lane`, `/resume`, etc.) are slash-commands invoked interactively by the user; agents are spawned programmatically by commands. Don't blur the two.
-- Commands live in `.claude/commands/`; agents live in `.claude/agents/`.
+- Never duplicate a capability across surfaces. If you find an existing skill/command/agent
+  that covers ≥80% of what you need, extend it; don't create a parallel implementation.
 
 ---
 
@@ -66,7 +80,7 @@ Use `/git-branch`, `/git-commit`, `/git-pr` for these tasks.
 
 ## 8. Session artifacts
 
-Pipeline runs write all artifacts to `sessions/<run_id>/` (e.g. `sessions/20260515-1430/`). These are local-only — excluded via `.git/info/exclude`, never committed.
+Pipeline runs write all artifacts to `sessions/<run_id>/` (e.g. `sessions/YYYYMMDD-HHMM/`). These are local-only — excluded via `.git/info/exclude`, never committed.
 
 `checkpoint.json` in each session directory tracks the current pipeline stage. Use `/resume <run_id>` to continue an interrupted run.
 
@@ -74,7 +88,7 @@ Pipeline runs write all artifacts to `sessions/<run_id>/` (e.g. `sessions/202605
 
 ## 9. Architecture reference
 
-See [`ARCHITECTURE.md`](./ARCHITECTURE.md) for the full harness design: hooks, agents, commands topology, session structure, and pipeline flow.
+See [`ARCHITECTURE.md`](./ARCHITECTURE.md) for the full project architecture and harness design: hooks, agents, commands topology, session structure, and pipeline flow.
 
 ---
 
@@ -84,8 +98,8 @@ Declare `app_types` to load app-type-specific threat models into every pipeline 
 
 ```yaml
 app_types:
-  - web_app
-  - api
+  - <app_type>
+  - <app_type>
 ```
 
 Accepted values (must match a filename in `security/profiles/` without `.md`):

@@ -9,9 +9,9 @@ allowed-tools: [Bash, Glob, Grep, Read, Write, Edit, Agent]
 # Unit Test Writer Agent
 
 Read the following files and follow their protocols exactly:
-- `.claude/commands/unit-test-writer/naming-conventions.md`
-- `.claude/commands/unit-test-writer/coverage-commands.md`
-- `.claude/commands/unit-test-writer/test-patterns.md`
+- `.claude/skills/unit-test-writer/references/naming-conventions.md`
+- `.claude/skills/unit-test-writer/references/coverage-commands.md`
+- `.claude/skills/unit-test-writer/references/test-patterns.md`
 
 ## Model selection
 
