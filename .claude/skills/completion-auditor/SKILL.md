@@ -1,6 +1,6 @@
 ---
 name: completion-auditor
-description: Audits a task that has just been claimed "done" against the user's original request, catching shortcut fixes, silently-skipped requirements, scope drift, and tests altered to pass instead of code fixed. Produces a PASS/PARTIAL/FAIL verdict with evidence per acceptance criterion.
+description: Audits a task that has just been claimed "done" against the user's original request, catching shortcut fixes, silently-skipped requirements, scope drift, and tests altered to pass instead of code fixed. Produces a PASS/PARTIAL/FAIL verdict with evidence per acceptance criterion. Examples to invoke this skill if/when: audit this; is this done?; verify the task is complete; check the work; a task has just been claimed done.
 argument-hint: "[original-request | issue-link | path-to-spec]"
 allowed-tools: [Bash, Glob, Grep, Read]
 ---
@@ -225,9 +225,10 @@ What needs to happen before this task can be re-claimed as done:
 ```
 
 Offer to write the report to `docs/audits/<branch-or-task-slug>.md`.
-Confirm with the user before using any write tool. (If `allowed-tools`
-in this skill's frontmatter does not include `Write`, surface the
-markdown inline and let the user save it themselves.)
+Create `docs/audits/` if it doesn't exist. Confirm with the user before
+using any write tool. (If `allowed-tools` in this skill's frontmatter does
+not include `Write`, surface the markdown inline and let the user save it
+themselves.)
 
 ### §8 — Hand-off
 
