@@ -1,6 +1,6 @@
 ---
 name: git-branch
-description: Create, name, and switch branches following Exelixis trunk-based conventions — always branches from main, enforces type/kebab-name format.
+description: Create, name, and switch branches following trunk-based conventions — always branches from main, enforces type/kebab-name format.
 argument-hint: "[intent description | branch-name to validate]"
 allowed-tools: [Bash]
 ---

@@ -1,6 +1,6 @@
 ---
 name: git-commit
-description: Stage changes and write a well-formed Conventional Commit message following Exelixis conventions — no AI footers, specific file staging, ≤72-char subjects.
+description: Stage changes and write a well-formed Conventional Commit message — no AI footers, specific file staging, ≤72-char subjects. Examples to invoke this skill if/when: a new feature or function was just implemented; a bug fix or refactor is complete; wrapping up a discrete chunk of work before switching context; "commit this"; "git commit".
 argument-hint: "[files to stage | 'all' | empty for interactive]"
 allowed-tools: [Bash, Glob, Grep, Read]
 ---
@@ -8,7 +8,7 @@ allowed-tools: [Bash, Glob, Grep, Read]
 # Git Commit
 
 Stages changes and produces a correctly-formed commit. Enforces Conventional
-Commits format and Exelixis house rules throughout.
+Commits format throughout.
 
 ## Scope
 
@@ -16,6 +16,28 @@ Input: `$ARGUMENTS` — a space-separated list of files to stage, the word `all`
 (stage everything changed), or empty (interactive guidance).
 
 Out of scope: pushing, branch creation, or PR creation.
+
+---
+
+## § 0 — Detect shell environment
+
+Before running any commands, identify the active shell:
+
+**bash / zsh / sh** — probe with:
+```bash
+echo $SHELL
+```
+
+**PowerShell** — if the above returns nothing or errors, probe with:
+```powershell
+$PSVersionTable.PSVersion
+```
+
+**cmd** — if neither works, assume cmd.
+
+Record the result. Use it in § 4 to pick the correct commit syntax. If the
+shell is cmd, warn the user that multi-line commit messages require bash or
+PowerShell — offer to open one.
 
 ---
 
@@ -43,6 +65,17 @@ tree is clean." and stop.
   include. Do not proceed without a confirmed file list.
 
 Stage using: `git add <file1> <file2> ...`
+
+**Sensitive file guard** — before confirming the staged set, scan for files that
+should never be committed. Reject staging and warn if any of the following appear:
+
+- `.env`, `.env.*`, `*.env`
+- Files named `credentials`, `secrets`, `token`, `key`, `password` (any extension)
+- `*.pem`, `*.p12`, `*.pfx`, `*.key`, `id_rsa`, `id_ed25519`
+- Any file the repo's `.gitignore` explicitly lists
+
+If found: "Sensitive file detected: `<file>` — remove it from the staged set before
+committing. If this is intentional, confirm explicitly."
 
 Confirm staged content: `git diff --staged --stat`
 
@@ -86,8 +119,9 @@ Confirm the message with the user before committing if the intent was ambiguous.
 
 ## § 4 — Commit
 
-Use a HEREDOC to preserve whitespace:
+Use the syntax matching the shell detected in § 0:
 
+**bash / zsh:**
 ```bash
 git commit -m "$(cat <<'EOF'
 type(scope): description
@@ -97,16 +131,30 @@ EOF
 )"
 ```
 
+**PowerShell:**
+```powershell
+git commit -m @'
+type(scope): description
+
+Optional body paragraph here.
+'@
+```
+
+**cmd** — not supported for multi-line messages. Switch to bash or PowerShell,
+or use a single-line message if the body is not needed:
+```cmd
+git commit -m "type(scope): description"
+```
+
 ---
 
 ## § 5 — Verify
 
 ```bash
-git log -1 --oneline
 git log -1 --format="%H %s"
 ```
 
-Print the result. Confirm the subject is correct.
+Print the result. Confirm the full SHA and subject are correct.
 
 ---
 
@@ -127,5 +175,5 @@ Stop and report the problem (do not commit) if any of the following are true:
 
 - § 1 output: raw `git status` and `git diff --stat` — no reformatting.
 - § 3 output: the proposed commit message in a fenced code block, clearly labeled.
-- § 5 output: `git log -1 --oneline` result on a single line.
+- § 5 output: `git log -1 --format="%H %s"` result on a single line.
 - If rejected: one sentence stating the problem and what to fix.
