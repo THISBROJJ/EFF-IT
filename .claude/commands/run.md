@@ -156,12 +156,14 @@ After karen returns PASS, before architect Trigger B:
 
 ## Step 7 — Security review
 
-Spawn the `security-reviewer` agent.
+Invoke the `/security-review` skill. Capture its output as `SKILL_SECURITY_OUTPUT`.
+
+Spawn the `security-reviewer` agent, passing `SKILL_SECURITY_OUTPUT` as `skill_findings`.
 
 | Result | Action |
 |---|---|
 | PASS | Continue to Step 8 |
-| FINDINGS | Append remediation tasks to `sessions/<run_id>/PLAN.md`; return to Step 5 |
+| FINDINGS | Append remediation tasks to `sessions/<run_id>/PLAN.md`; agent writes findings to `sessions/<run_id>/PROBLEMS.md`; return to Step 5 |
 
 Update checkpoint: `"stage": "git"`.
 

@@ -167,12 +167,14 @@ After karen returns PASS, before security review:
 
 ## Step 6 — Security review
 
-Spawn the `security-reviewer` agent.
+Invoke the `/security-review` skill. Capture its output as `SKILL_SECURITY_OUTPUT`.
+
+Spawn the `security-reviewer` agent, passing `SKILL_SECURITY_OUTPUT` as `skill_findings`.
 
 | Result | Action |
 |---|---|
 | PASS | Continue to Step 7 |
-| FINDINGS | Append remediation tasks to `sessions/<run_id>/PLAN.md`; return to Step 4 |
+| FINDINGS | Append remediation tasks to `sessions/<run_id>/PLAN.md`; agent writes findings to `sessions/<run_id>/PROBLEMS.md`; return to Step 4 |
 
 Update checkpoint: `"stage": "git"`.
 

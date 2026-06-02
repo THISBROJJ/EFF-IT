@@ -78,8 +78,21 @@ Spawn the `test-runner` agent with `PLAN_PATH`. Wait for it to complete.
 |---|---|
 | BLOCKED (immutability violation) | Surface the violation to the user; pause and wait for resolution |
 | UNKNOWN (no test command) | Surface to the user; pause and wait |
-| PASS | Exit loop with STATUS: PASS |
+| PASS | Proceed to Step 4.5 — Security check |
 | FAIL | Identify failing components; update their task `context` with failure output; go to Iteration N+1 |
+
+**4.5. Security check** (runs only when Step 4 result is PASS)
+
+Invoke the `/security-review` skill. Capture its output as `SKILL_SECURITY_OUTPUT`.
+
+Spawn the `security-reviewer` agent with `run_id` and `skill_findings: SKILL_SECURITY_OUTPUT`.
+
+**REQUIRED — record before acting on result:** Spawn `session-keeper` with: `run_id`, `agent_name="security-reviewer"`, `task_id="security-check"`, `iteration`, `status="DONE"`, `summary` (e.g. "PASS" or "FINDINGS — N items"), `karen_verdict="n/a"`, `karen_findings=""`, `scope="all"`. Wait for session-keeper to complete before reading the result below.
+
+| Security verdict | Action |
+|---|---|
+| PASS | Exit loop with STATUS: PASS |
+| FINDINGS | Append remediation tasks to `sessions/<run_id>/PLAN.md`; agent writes findings to `sessions/<run_id>/PROBLEMS.md`; go to Iteration N+1 (or escalate if max_iterations reached — include security findings in escalation report) |
 
 **5. Max iterations check**
 
