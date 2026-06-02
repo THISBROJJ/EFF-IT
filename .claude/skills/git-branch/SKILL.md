@@ -1,13 +1,13 @@
 ---
 name: git-branch
-description: Create, name, and switch branches following trunk-based conventions — always branches from main, enforces type/kebab-name format.
+description: Create, name, and switch branches following trunk-based conventions — always branches from main, enforces type/kebab-name format. Examples to invoke this skill if/when: new branch; create a branch; start work on X; beginning a new feature, fix, or task.
 argument-hint: "[intent description | branch-name to validate]"
 allowed-tools: [Bash]
 ---
 
 # Git Branch
 
-Creates or validates a branch following Exelixis trunk-based development rules.
+Creates or validates a branch following trunk-based development rules.
 If given a plain-language intent (e.g., "add login page"), derives a correct
 branch name and creates it. If given an explicit name, validates it first.
 
@@ -26,15 +26,18 @@ Out of scope: committing, pushing, or creating PRs.
 
 Infer the branch type from the intent:
 
-| Intent signals | Branch type |
-|---|---|
-| new feature, add X, build X | `feat/` |
-| bug, broken, fix, patch | `fix/` |
-| docs, readme, comment, docstring | `docs/` |
-| config, deps, cleanup, chore | `chore/` |
-| hotfix, urgent, prod issue | `hotfix/` |
-| refactor, restructure, move | `refactor/` |
-| test, spec, coverage | `test/` |
+| Intent signals | Branch type | Commit type to use |
+|---|---|---|
+| new feature, add X, build X | `feat/` | `feat` |
+| bug, broken, fix, patch | `fix/` | `fix` |
+| docs, readme, comment, docstring | `docs/` | `docs` |
+| config, deps, cleanup, chore | `chore/` | `chore`, `ci`, `perf` |
+| hotfix, urgent, prod issue | `hotfix/` | `fix` |
+| refactor, restructure, move | `refactor/` | `refactor` |
+| test, spec, coverage | `test/` | `test` |
+
+Note: `hotfix/` branches use `fix:` commits (there is no `hotfix` commit type).
+`ci` and `perf` commits typically land on a `chore/` branch.
 
 Construct name: `type/2-4-word-kebab-summary`
 
