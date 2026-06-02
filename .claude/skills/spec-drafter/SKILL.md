@@ -62,14 +62,20 @@ and notes on which sections are typically weakest.
    than inventing plausible content. Real gaps are more useful than
    plausible-looking placeholders.
 
-6. **Confirm the path before writing.** Suggest a default based on doc type
-   and always confirm before invoking Write. Create the directory if it doesn't
-   exist:
-   - `prd` → `docs/prd/<slug>.md`
-   - `tech-spec` → `docs/spec/<slug>.md`
-   - `design-doc` → `docs/design/<slug>.md`
-   - `speckit` → `specs/<###-feature-name>/spec.md`
-   - `tessl` → `specs/<feature>.spec.md` (next to the code it targets)
+6. **Confirm the path before writing.** Resolve the active session first:
+
+   ```bash
+   run_id=$(cat .current_run 2>/dev/null)
+   [ -z "$run_id" ] && run_id="standalone-$(date +%Y%m%d-%H%M)"
+   ```
+
+   Suggest a default path based on doc type and always confirm before invoking Write.
+   Create the directory if it doesn't exist:
+   - `prd` → `sessions/<run_id>/prd/<slug>.md`
+   - `tech-spec` → `sessions/<run_id>/spec/<slug>.md`
+   - `design-doc` → `sessions/<run_id>/design/<slug>.md`
+   - `speckit` → `sessions/<run_id>/specs/<###-feature-name>/spec.md`
+   - `tessl` → `specs/<feature>.spec.md` (next to the code it targets — stays in repo)
 
 ## Output
 

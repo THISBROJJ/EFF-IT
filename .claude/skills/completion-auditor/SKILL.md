@@ -2,7 +2,7 @@
 name: completion-auditor
 description: Audits a task that has just been claimed "done" against the user's original request, catching shortcut fixes, silently-skipped requirements, scope drift, and tests altered to pass instead of code fixed. Produces a PASS/PARTIAL/FAIL verdict with evidence per acceptance criterion. Examples to invoke this skill if/when: audit this; is this done?; verify the task is complete; check the work; a task has just been claimed done.
 argument-hint: "[original-request | issue-link | path-to-spec]"
-allowed-tools: [Bash, Glob, Grep, Read]
+allowed-tools: [Bash, Glob, Grep, Read, Write]
 ---
 
 # Completion Auditor
@@ -224,11 +224,16 @@ What needs to happen before this task can be re-claimed as done:
 - <stuff that isn't blocking but the user should know about>
 ```
 
-Offer to write the report to `docs/audits/<branch-or-task-slug>.md`.
-Create `docs/audits/` if it doesn't exist. Confirm with the user before
-using any write tool. (If `allowed-tools` in this skill's frontmatter does
-not include `Write`, surface the markdown inline and let the user save it
-themselves.)
+Resolve the active session, then offer to write the report:
+
+```bash
+run_id=$(cat .current_run 2>/dev/null)
+[ -z "$run_id" ] && run_id="standalone-$(date +%Y%m%d-%H%M)"
+```
+
+Offer to write to `sessions/<run_id>/audits/<branch-or-task-slug>.md`.
+Create the directory if it doesn't exist. Confirm with the user before
+using any write tool.
 
 ### §8 — Hand-off
 
