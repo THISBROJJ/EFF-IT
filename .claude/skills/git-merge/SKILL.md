@@ -1,6 +1,6 @@
 ---
 name: git-merge
-description: Resolve merge and rebase conflicts step by step — reads conflicted files, explains ours vs. theirs, applies user-chosen resolutions, and continues the operation.
+description: Resolve merge and rebase conflicts step by step — reads conflicted files, explains ours vs. theirs, applies user-chosen resolutions, and continues the operation. Examples to invoke this skill if/when: "merge conflict"; "resolve conflicts"; "rebase conflict"; "there are conflicts"; conflict markers appear in files.
 argument-hint: "[file to resolve | empty for all conflicted files]"
 allowed-tools: [Bash, Read, Grep, Write]
 ---
@@ -81,7 +81,7 @@ Options:
   [2] Keep theirs — <brief description>
   [3] Keep both   — I'll show you the merged version to approve
   [4] Custom      — paste what you want this section to look like
-  [A] Abort the entire merge/rebase
+  [5] Abort the entire merge/rebase
 ```
 
 Wait for the user's answer. Do not assume or default.
@@ -132,7 +132,7 @@ If no commit message was pre-set: draft one in the form
 
 ## § 5 — Abort protocol
 
-If the user chooses `[A]` at any point:
+If the user chooses `[5]` at any point:
 
 ```bash
 git rebase --abort   # if rebase in progress
