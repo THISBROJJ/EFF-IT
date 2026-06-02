@@ -1,6 +1,6 @@
 ---
 name: unit-test-writer
-description: Generates unit tests for new or changed code following TDD principles and enforces 90% coverage across lines, functions, and branches
+description: Generates unit tests for new or changed code following TDD principles and enforces 90% coverage across lines, functions, and branches. Examples to invoke this skill if/when: write tests; add unit tests; coverage is low; test this function; no tests exist for X.
 argument-hint: "[path | function-name | feature-description]"
 allowed-tools: [Bash, Glob, Grep, Read, Write, Edit]
 ---
@@ -29,7 +29,7 @@ description. Omit the argument to scan the entire codebase.
 Run the bundled detection script from the project root:
 
 ```bash
-SKILL_DIR="$HOME/.claude/skills/unit-test-writer"
+SKILL_DIR="$(git rev-parse --show-toplevel)/.claude/skills/unit-test-writer"
 bash "$SKILL_DIR/scripts/detect-framework.sh" .
 ```
 
@@ -59,12 +59,12 @@ If no argument was provided, scan the full codebase (§3).
 Run the coverage command detected in §1, then normalize and check:
 
 ```bash
-SKILL_DIR="$HOME/.claude/skills/unit-test-writer"
+SKILL_DIR="$(git rev-parse --show-toplevel)/.claude/skills/unit-test-writer"
 
 # Run the project's coverage command (from §1 COVERAGE_CMD) and pipe to
 # parse-coverage.py, then check against the 90% threshold.
 eval "$COVERAGE_CMD" 2>&1 | python3 "$SKILL_DIR/scripts/parse-coverage.py" | \
-  tee /tmp/coverage-normalized.tsv | \
+  tee "${TMPDIR:-/tmp}/coverage-normalized.tsv" | \
   bash "$SKILL_DIR/scripts/check-threshold.sh" 90
 ```
 
@@ -116,7 +116,10 @@ For each target, in ranked order:
 4. **Create or edit the test file**:
    - New file: use Write, follow the project's naming convention
      (e.g. `token.test.ts` alongside `token.ts`, or `tests/test_token.py`)
-   - Existing file: use Edit, append only — never delete existing tests
+   - Existing file: append only — never delete existing tests. Note: the
+     `test-immutability.sh` hook blocks edits to existing test files. If it
+     fires, write a new test file instead and move the old one to
+     `tests/deprecated/` with a `# DEPRECATED <date>: <reason>` header.
 
 After each file, briefly state what was added:
 ```
