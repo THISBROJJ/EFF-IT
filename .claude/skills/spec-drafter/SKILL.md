@@ -1,6 +1,6 @@
 ---
 name: spec-drafter
-description: Drafts a PRD, technical spec, design doc, or spec-driven-development feature spec (GitHub Spec Kit / Tessl) from prior conversation context. Picks the template based on the artifact type and fills it from what's already been discussed, asking only the targeted questions needed to fill remaining gaps.
+description: Drafts a PRD, technical spec, design doc, or spec-driven-development feature spec (GitHub Spec Kit / Tessl) from prior conversation context. Picks the template based on the artifact type and fills it from what's already been discussed, asking only the targeted questions needed to fill remaining gaps. Examples to invoke this skill if/when: draft a spec; write a PRD; spec this out; create a design doc; document this feature.
 argument-hint: "[prd|tech-spec|design-doc|speckit|tessl] [optional title]"
 allowed-tools: [Read, Write, Edit, Glob, Grep]
 ---
@@ -63,7 +63,8 @@ and notes on which sections are typically weakest.
    plausible-looking placeholders.
 
 6. **Confirm the path before writing.** Suggest a default based on doc type
-   and always confirm before invoking Write:
+   and always confirm before invoking Write. Create the directory if it doesn't
+   exist:
    - `prd` → `docs/prd/<slug>.md`
    - `tech-spec` → `docs/spec/<slug>.md`
    - `design-doc` → `docs/design/<slug>.md`
