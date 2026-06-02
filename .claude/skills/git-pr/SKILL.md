@@ -1,6 +1,6 @@
 ---
 name: git-pr
-description: Create a GitHub pull request following Exelixis conventions — imperative title ≤70 chars, structured body, base main, draft flag for WIP. Wraps gh pr create.
+description: Create a GitHub pull request — imperative title ≤70 chars, structured body, base main, draft flag for WIP. Wraps gh pr create. Examples to invoke this skill if/when: "open a PR"; "create a pull request"; "ready for review"; branch is ready to merge; work is done and needs review.
 argument-hint: "[title | 'draft' for a draft PR | empty for guided mode]"
 allowed-tools: [Bash, Glob, Grep, Read]
 ---
@@ -8,8 +8,7 @@ allowed-tools: [Bash, Glob, Grep, Read]
 # Git PR — Pull Request Creation
 
 Creates a well-formed GitHub PR against `main` using `gh pr create`.
-Enforces Exelixis PR conventions and collects any missing information
-before opening.
+Collects any missing information before opening.
 
 ## Scope
 
@@ -34,7 +33,7 @@ Checks:
 - **Clean working tree:** warn if uncommitted changes exist.
   "You have uncommitted changes — they won't be in this PR unless you commit first."
 - **Branch is pushed:** run `git ls-remote --heads origin <branch>`. If empty,
-  tell the user: "Branch hasn't been pushed yet — push it first or I can do it now (SSH required)."
+  tell the user: "Branch hasn't been pushed yet — push it first or I can do it now."
 
 ---
 
@@ -88,8 +87,10 @@ Record the answer verbatim.
 
 ## § 3 — Create the PR
 
-Compose the body and run `gh pr create` via HEREDOC:
+Compose the body and run `gh pr create` using the syntax for the active shell
+(detected in the same way as `git-commit` § 0):
 
+**bash / zsh:**
 ```bash
 gh pr create \
   --title "<title>" \
@@ -108,6 +109,26 @@ gh pr create \
 <yes/no — explanation if yes>
 EOF
 )"
+```
+
+**PowerShell:**
+```powershell
+gh pr create `
+  --title "<title>" `
+  --base main `
+  [--draft] `
+  --body @'
+## Summary
+- <bullet 1>
+- <bullet 2>
+
+## Test plan
+- [ ] <test step 1>
+- [ ] <test step 2>
+
+## Does this touch secrets, auth, or payments?
+<yes/no — explanation if yes>
+'@
 ```
 
 Do NOT add:
