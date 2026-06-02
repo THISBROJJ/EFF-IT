@@ -1,6 +1,6 @@
 ---
 name: architect
-description: Explore the codebase and surface deepening opportunities — refactors that turn shallow agents, skills, and hooks into deep, well-seamed modules. Use when the user wants to improve architecture, consolidate tightly-coupled modules, or make the codebase more testable and AI-navigable. May write ADRs to docs/adr/ and update ARCHITECTURE.md as side effects of the grilling loop; the architect agent (spawned for plan-review) is strictly read-only.
+description: Explore the codebase and surface deepening opportunities — refactors that turn shallow agents, skills, and hooks into deep, well-seamed modules. Use when the user wants to improve architecture, consolidate tightly-coupled modules, or make the codebase more testable and AI-navigable. May write ADRs to docs/adr/ and update ARCHITECTURE.md as side effects of the grilling loop; the architect agent (spawned for plan-review) is strictly read-only. Examples to invoke this skill if/when: improve architecture; review architecture; surface refactoring opportunities; the codebase feels messy; consolidate modules.
 argument-hint: [path or topic to focus on]
 allowed-tools: [Agent, Read, Glob, Grep, Write]
 ---
@@ -30,9 +30,8 @@ names a path or topic, focus there. Otherwise, walk the full repo:
 
 - `.claude/agents/` — agent definitions
 - `.claude/skills/` — skill definitions
-- `.claude/hooks/` — hook scripts
-- `scripts/` — utility scripts
-- `evaluation/` — test harness
+- `scripts/` — hook scripts and utilities (hooks are wired via `.claude/settings.json`)
+- `tests/` — test harness
 
 Explore organically. Note where you experience friction:
 
@@ -84,7 +83,7 @@ As decisions crystallize, make these side effects immediately:
 
 - **New concept not in `ARCHITECTURE.md`?** Suggest adding it (offer to write it).
 - **User rejects a candidate with a load-bearing reason?** Offer to record an ADR in
-  `docs/adr/`. Only offer when the reason is structural and durable — skip "not worth it
-  right now" and self-evident reasons. The ADR exists so future architect reviews don't
-  re-suggest the same thing.
+  `docs/adr/`. Create the directory if it doesn't exist. Only offer when the reason is
+  structural and durable — skip "not worth it right now" and self-evident reasons. The ADR
+  exists so future architect reviews don't re-suggest the same thing.
 - **Decision contradicts `CLAUDE.md` rules?** Flag it; don't silently override.
