@@ -1,6 +1,6 @@
 ---
 name: pr-decomposition
-description: Decomposes a multi-part task or staged diff into atomic independently-mergeable pull requests with filled PR templates.
+description: Decomposes a multi-part task or staged diff into atomic independently-mergeable pull requests with filled PR templates. Examples to invoke this skill if/when: split this into PRs; decompose this change; break this up; too many concerns in one diff; planning how to sequence a large change.
 argument-hint: [task description | diff]
 allowed-tools: [Bash, Glob, Grep, Read]
 ---
