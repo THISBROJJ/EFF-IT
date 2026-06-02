@@ -123,21 +123,15 @@ for p in "${PATTERNS[@]}"; do
   GREP_ARGS+=(-e "$p")
 done
 
-_GREP_ERR=$(mktemp)
-set +e
 RAW=$(grep -rnE \
   "${EXCLUDE[@]}" \
   "${GREP_ARGS[@]}" \
-  "$SCAN_PATH" 2>"$_GREP_ERR")
+  "$SCAN_PATH")
 GREP_EXIT=$?
-set -e
 if [ "$GREP_EXIT" -eq 2 ]; then
   echo "ERROR: Scanner failed (grep exit 2 — unreadable files or invalid pattern). Treating as FAIL." >&2
-  cat "$_GREP_ERR" >&2
-  rm -f "$_GREP_ERR"
   exit 2
 fi
-rm -f "$_GREP_ERR"
 FINDINGS=$(printf '%s\n' "$RAW" \
   | grep -vEi "$PLACEHOLDER_RE" \
   | grep -v 'tests/fixtures/' \

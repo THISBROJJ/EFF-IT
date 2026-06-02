@@ -8,7 +8,7 @@ set -u
 
 f=$(jq -r '.tool_input.file_path // empty')
 if [ -n "$f" ] && [ -f "$f" ]; then
-  bash scripts/secrets-scanner.sh "$f" 2>/dev/null || true
+  bash scripts/secrets-scanner.sh "$f" || true
 fi
 
 exit 0

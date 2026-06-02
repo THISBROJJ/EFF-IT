@@ -44,7 +44,7 @@ fi
 if is_test_file "$FILE_NORM"; then
   # Creating a new test file is allowed (TDD requires it).
   # Overwriting or editing an existing test file is blocked.
-  if [ -f "$FILE" ] || [ -f "$FILE_NORM" ]; then
+  if [ -f "$FILE_NORM" ]; then
     MSG="Test file '${FILE}' is immutable. Per CLAUDE.md §4, existing test files cannot be"
     MSG="${MSG} modified. To update a test: write a new file, or move the original to"
     MSG="${MSG} tests/deprecated/ with a '# DEPRECATED <date>: <reason>' header."

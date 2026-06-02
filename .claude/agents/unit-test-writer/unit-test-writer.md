@@ -55,7 +55,7 @@ Coverage: <final coverage % per file, from skill §6>
 Notes:    <anything test-runner needs to know>
 ```
 
-If `Status: BLOCKED`, resolve the active session and append to `sessions/<run_id>/problems.md` (create if absent):
+If `Status: BLOCKED`, resolve the active session and append to `sessions/<run_id>/PROBLEMS.md` (create if absent):
 
 ```bash
 run_id=$(cat .current_run 2>/dev/null)

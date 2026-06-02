@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # PostToolUse hook for Write on sessions/{run_id}/PROGRESS_TRACKER.md
-# Stages all changes and commits with a message derived from the last log heading.
+# Stages the tracker file and commits with a message derived from the last log heading.
 # Fires only when a session progress tracker is written (filtered by settings.json
 # and guarded again here for robustness).
 
