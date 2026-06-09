@@ -58,3 +58,4 @@ The agent's `name:` frontmatter field is what identifies it to Claude Code, not 
 | `git-expert` | Branching, committing, pushing, PR creation |
 | `session-keeper` | Owns `sessions/<run_id>/PROGRESS_TRACKER.md` exclusively — appends one entry per agent completion |
 | `agent-evaluator` | Scores each agent's trace against its `criteria.json`, emits per-agent verdict JSON |
+| `spec-keeper` | Appends a dated summary of the session spec to `docs/SPEC.md` after Karen PASS |

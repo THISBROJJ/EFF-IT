@@ -61,6 +61,7 @@ optional `model`. Live in `.claude/agents/` — Claude Code discovers them autom
 | `agent-evaluator` | Evaluates agent output quality against expected behavior |
 | `test-runner` | Runs the test suite and reports pass/fail/blocked |
 | `unit-test-writer` | Generates unit tests targeting ≥90% coverage |
+| `spec-keeper` | Appends a dated entry to `docs/SPEC.md` after Karen PASS |
 
 ---
 

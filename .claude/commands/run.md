@@ -135,7 +135,7 @@ Spawn the `karen` agent:
 
 | Karen verdict | Action |
 |---|---|
-| PASS | Spawn `architect` agent (Trigger B) to update root `ARCHITECTURE.md`; continue to Step 7 |
+| PASS | Spawn `architect` agent (Trigger B, inputs: `spec_path`, `slug`) to update root `ARCHITECTURE.md` and `spec-keeper` agent (inputs: `spec_path`, `slug`, `run_id`) to append to `docs/SPEC.md`; continue to Step 7 |
 | PARTIAL or FAIL | Append Karen's punch list to `sessions/<run_id>/PLAN.md`; return to Step 5 |
 
 Update checkpoint: `"stage": "security"`.
