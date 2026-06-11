@@ -1,18 +1,18 @@
 ---
-name: fast-lane
-description: Build half of the SDLC — read the repo-root PLAN.md produced by /design, pick one task, implement it through the test/fix loop, audit (karen) and security-review it, and open one atomic PR. Re-invoke for the next task. Requires a design produced by /design.
+name: build-task
+description: Build half of the SDLC — read the repo-root PLAN.md produced by /draft-design-docs, pick one task, implement it through the test/fix loop, audit (karen) and security-review it, and open one atomic PR. Re-invoke for the next task. Requires a design produced by /draft-design-docs.
 argument-hint: "[task id to build, or empty to choose]"
 allowed-tools: [Agent, Bash, Read, Write, Glob, Grep]
 ---
 
-# Fast Lane — SDLC Build Half
+# Build Task — SDLC Build Half
 
 Reads the durable master `PLAN.md` at the repo root, builds **one task** end-to-end into an
 atomic, independently-mergeable PR, and flips that task's `status` to `DONE`. Run it once per
 task; re-invoke for the next. Progress for the whole design is tracked in the one root
 `PLAN.md` — that is the single source of truth for what is and isn't done.
 
-The design docs (`SPEC.md`, `CONCERN.md`, `ARCHITECTURE.md`, `PLAN.md`) come from `/design`.
+The design docs (`SPEC.md`, `CONCERN.md`, `ARCHITECTURE.md`, `PLAN.md`) come from `/draft-design-docs`.
 This command does not produce them.
 
 ---
@@ -27,7 +27,7 @@ git branch --show-current
 Must be on `main` with a clean tree. If not, stop and tell the user.
 
 Read the repo-root `PLAN.md`. If it is **absent**, stop:
-"No design found. Run `/design` first, then merge its PR so `PLAN.md` is on `main`."
+"No design found. Run `/draft-design-docs` first, then merge its PR so `PLAN.md` is on `main`."
 
 ---
 
@@ -184,7 +184,7 @@ rm -f .current_run
 ## Step 7 — Done
 
 Tell the user the task's PR is open at `<url>`, and how many tasks remain `TODO` in
-`PLAN.md`. If tasks remain, prompt: "Merge this PR, then run `/fast-lane` for the next task."
+`PLAN.md`. If tasks remain, prompt: "Merge this PR, then run `/build-task` for the next task."
 If the design was finalized, say so — `ARCHITECTURE.md` has its as-built section and the
 shipped spec is logged in `docs/SPEC.md`.
 
@@ -194,7 +194,7 @@ shipped spec is logged in `docs/SPEC.md`.
 
 | Artifact | Path | Lifetime |
 |---|---|---|
-| Spec / concern / architecture | `SPEC.md` · `CONCERN.md` · `ARCHITECTURE.md` (repo root) | durable (from `/design`) |
+| Spec / concern / architecture | `SPEC.md` · `CONCERN.md` · `ARCHITECTURE.md` (repo root) | durable (from `/draft-design-docs`) |
 | Master task plan | `PLAN.md` (repo root) | durable; status flipped per task |
 | Per-task working plan | `sessions/<run_id>/PLAN.md` | ephemeral |
 | Progress tracker / problems / evaluation | `sessions/<run_id>/{PROGRESS_TRACKER,PROBLEMS,EVALUATION}.md` | ephemeral |

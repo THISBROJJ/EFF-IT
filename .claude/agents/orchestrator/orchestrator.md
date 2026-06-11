@@ -30,7 +30,7 @@ Also read, if it exists:
 
 ## Output
 
-Write the repo-root `PLAN.md` — the durable master tasklist. `/fast-lane` reads it, builds
+Write the repo-root `PLAN.md` — the durable master tasklist. `/build-task` reads it, builds
 one task at a time, and flips each task's `status` to `DONE` when its PR lands.
 Return the plan path when done.
 
@@ -52,8 +52,8 @@ parallel_groups:
         agent: coder
         scope: <file or directory>
         depends_on: []
-        status: TODO   # TODO | DONE — flipped to DONE by /fast-lane when the PR lands
-        pr:            # PR URL, filled in by /fast-lane on completion
+        status: TODO   # TODO | DONE — flipped to DONE by /build-task when the PR lands
+        pr:            # PR URL, filled in by /build-task on completion
       - id: P1-T2
         description: <specific implementation task>
         agent: unit-test-writer
@@ -81,7 +81,7 @@ acceptance_criteria:
 ```
 
 Every task carries `status: TODO` and an empty `pr:` field on first write. The orchestrator
-never sets these to anything but `TODO`/empty — `/fast-lane` owns their lifecycle.
+never sets these to anything but `TODO`/empty — `/build-task` owns their lifecycle.
 
 <!-- AC format (ID rules, stability, zero-padding) is defined in `.claude/HARNESS.md` — see Cross-agent contracts. -->
 

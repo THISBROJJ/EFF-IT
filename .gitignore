@@ -34,7 +34,7 @@ coverage/
 htmlcov/
 .pytest_cache/
 
-# Generated library code — /fast-lane builds produce src/ and tests/ but those
+# Generated library code — /build-task builds produce src/ and tests/ but those
 # artifacts belong in their own repo, not in the harness. Use git add -f on
 # the feature branch if you intentionally want to capture them here.
 src/

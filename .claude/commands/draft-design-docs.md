@@ -1,18 +1,18 @@
 ---
-name: design
-description: Design half of the SDLC — interrogate the idea, draft the spec, resolve security concerns, draft the architecture, and decompose into a task plan. Produces the durable repo-root design docs (SPEC.md, CONCERN.md, ARCHITECTURE.md, PLAN.md) and opens a design PR. Hand off to /fast-lane to build.
+name: draft-design-docs
+description: Design half of the SDLC — interrogate the idea, draft the spec, resolve security concerns, draft the architecture, and decompose into a task plan. Produces the durable repo-root design docs (SPEC.md, CONCERN.md, ARCHITECTURE.md, PLAN.md) and opens a design PR. Hand off to /build-task to build.
 argument-hint: "[idea or feature description]"
 allowed-tools: [Agent, Bash, Read, Write, Glob, Grep]
 ---
 
-# Design — SDLC Front Half
+# Draft Design Docs — SDLC Front Half
 
 Turns an idea into the four durable, repo-root design docs and opens a PR for them.
-Stops there. Once the design PR is merged, run `/fast-lane` to build the plan one task at a
-time. This is the half `/fast-lane` does NOT do.
+Stops there. Once the design PR is merged, run `/build-task` to build the plan one task at a
+time. This is the half `/build-task` does NOT do.
 
 The four design docs live at the **repo root** — they are the *project's* docs (the harness's
-own architecture is `.claude/HARNESS.md`). A later `/design` cycle **overwrites** them, so
+own architecture is `.claude/HARNESS.md`). A later `/draft-design-docs` cycle **overwrites** them, so
 finish or shelve the current design before starting a new one (the permanent cross-cycle log
 is `docs/SPEC.md`, maintained by `spec-keeper`).
 
@@ -25,7 +25,7 @@ Confirm the repo is on `main` with a clean working tree (`git status --short`,
 
 If a repo-root `PLAN.md` already exists with tasks whose `status` is not `DONE`, warn:
 "An unfinished design is in progress (`<slug>`, N pending tasks). Starting a new design will
-overwrite it. Finish it with `/fast-lane`, or confirm you want to replace it." Wait for
+overwrite it. Finish it with `/build-task`, or confirm you want to replace it." Wait for
 confirmation before proceeding.
 
 ---
@@ -57,7 +57,7 @@ Write `sessions/<run_id>/checkpoint.json`:
 }
 ```
 
-Test-command detection is not done here — it belongs to the build half (`/fast-lane`).
+Test-command detection is not done here — it belongs to the build half (`/build-task`).
 
 ---
 
@@ -131,6 +131,6 @@ rm -f .current_run
 Tell the user:
 - The design docs are at the repo root and opened in PR `<url>`.
 - Review/edit them on the PR, then **merge it** so the docs land on `main`.
-- After merge, run `/fast-lane` to build the plan one task at a time.
+- After merge, run `/build-task` to build the plan one task at a time.
 
 Do not auto-continue into the build — the user reviews and merges first.

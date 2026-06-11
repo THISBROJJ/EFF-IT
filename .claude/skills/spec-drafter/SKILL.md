@@ -73,7 +73,7 @@ and notes on which sections are typically weakest.
    Create the directory if it doesn't exist:
    - `prd` → `sessions/<run_id>/prd/<slug>.md`
    - `tech-spec` → `sessions/<run_id>/spec/<slug>.md`
-   - `design-doc` → `sessions/<run_id>/design/<slug>.md`
+   - `design-doc` → `sessions/<run_id>/draft-design-docs/<slug>.md`
    - `speckit` → `sessions/<run_id>/specs/<###-feature-name>/spec.md`
    - `tessl` → `specs/<feature>.spec.md` (next to the code it targets — stays in repo)
 

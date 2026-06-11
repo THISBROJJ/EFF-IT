@@ -1,6 +1,6 @@
 ---
 name: setup-code-structure
-description: One-time project bootstrap — read the repo-root ARCHITECTURE.md (and PLAN.md task scopes) and scaffold the code directory structure it describes, dropping a short explainer README.md in each created folder. Idempotent. Run once after the design PR merges, before /fast-lane.
+description: One-time project bootstrap — read the repo-root ARCHITECTURE.md (and PLAN.md task scopes) and scaffold the code directory structure it describes, dropping a short explainer README.md in each created folder. Idempotent. Run once after the design PR merges, before /build-task.
 argument-hint: "(no arguments)"
 allowed-tools: [Agent, Bash, Read, Write, Glob, Grep]
 ---
@@ -9,8 +9,8 @@ allowed-tools: [Agent, Bash, Read, Write, Glob, Grep]
 
 Reads the durable repo-root `ARCHITECTURE.md` and creates the directory structure it
 describes, dropping a one-paragraph explainer `README.md` in each folder it creates. Run this
-**once**, after `/design`'s PR is merged (so `ARCHITECTURE.md` is on `main`) and before the
-first `/fast-lane` build, to lay down the skeleton the plan's tasks will fill in.
+**once**, after `/draft-design-docs`'s PR is merged (so `ARCHITECTURE.md` is on `main`) and before the
+first `/build-task` build, to lay down the skeleton the plan's tasks will fill in.
 
 This is a bootstrap, not a pipeline stage: it has no session, no checkpoint, and is not
 resumable. It is **idempotent** — re-running it only fills in what is missing and never
@@ -28,7 +28,7 @@ git branch --show-current
 Should be on `main` with a clean tree. If not, ask the user to commit/stash first.
 
 Confirm the repo-root `ARCHITECTURE.md` exists. If it is **absent**, stop:
-"No architecture found. Run `/design` first and merge its PR so `ARCHITECTURE.md` is on
+"No architecture found. Run `/draft-design-docs` first and merge its PR so `ARCHITECTURE.md` is on
 `main`, then run `/setup-code-structure`."
 
 ---
@@ -100,4 +100,4 @@ The scaffold is left in the working tree. Suggest the user review it and commit 
 directly or by invoking the `git-expert` agent on a `chore/scaffold` branch to open a PR. Do
 not commit automatically.
 
-Then point the user to the next step: run `/fast-lane` to build the first task from `PLAN.md`.
+Then point the user to the next step: run `/build-task` to build the first task from `PLAN.md`.

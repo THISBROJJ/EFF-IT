@@ -9,7 +9,7 @@ Simulates a completed pipeline run.
 
 ## Expected behavior
 
-`/resume` must refuse with:
+`/resume-run` must refuse with:
 
 > "This run is already complete. Nothing to resume."
 

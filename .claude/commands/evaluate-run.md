@@ -9,7 +9,7 @@ allowed-tools: [Agent, Read, Write, Glob, Grep, Bash]
 
 Reads recorded agent traces from a completed run's `PROGRESS_TRACKER.md`, scores
 each agent against its `criteria.json`, and writes a consolidated `EVALUATION.md`.
-Callable standalone or auto-invoked from `/fast-lane` after karen returns PASS.
+Callable standalone or auto-invoked from `/build-task` after karen returns PASS.
 
 ## Inputs
 

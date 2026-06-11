@@ -16,14 +16,14 @@ flowchart TD
     classDef stage    fill:#37474F,stroke:#263238,color:#fff
 
     %% ── Entry Points ──────────────────────────────────────────────────────────
-    DESIGN["/design [idea]"]:::cmd
-    FAST["/fast-lane [task]"]:::cmd
-    RESUME["/resume [run_id]"]:::cmd
+    DESIGN["/draft-design-docs [idea]"]:::cmd
+    FAST["/build-task [task]"]:::cmd
+    RESUME["/resume-run [run_id]"]:::cmd
 
     %% ══════════════════════════════════════════════════════════════════════════
     %% DESIGN HALF — stays on main, produces root docs, opens design PR, stops
     %% ══════════════════════════════════════════════════════════════════════════
-    subgraph DESIGN_HALF ["  /design — Design Half (on main → design PR)  "]
+    subgraph DESIGN_HALF ["  /draft-design-docs — Design Half (on main → design PR)  "]
         direction TB
 
         D_PRE{"clean main?"}:::decision
@@ -55,14 +55,14 @@ flowchart TD
     %% ══════════════════════════════════════════════════════════════════════════
     %% BUILD HALF — once per task, re-invoked for the next
     %% ══════════════════════════════════════════════════════════════════════════
-    subgraph BUILD_HALF ["  /fast-lane — Build Half (once per task → atomic PR)  "]
+    subgraph BUILD_HALF ["  /build-task — Build Half (once per task → atomic PR)  "]
         direction TB
 
         B_PRE{"clean main?"}:::decision
         B_PRE -- "No"  --> B_STOP["Stop — commit / stash first"]:::stage
         B_PRE -- "Yes" --> B_READ["read root PLAN.md"]:::stage
         B_READ --> B_PLANQ{"PLAN.md present?"}:::decision
-        B_PLANQ -- "No" --> B_NOPLAN["Tell user to run /design"]:::stage
+        B_PLANQ -- "No" --> B_NOPLAN["Tell user to run /draft-design-docs"]:::stage
         B_PLANQ -- "Yes" --> B_SELECT["select BUILDABLE task\nstatus != DONE AND deps DONE\nask user · warn on blocked"]:::stage
 
         B_SELECT --> B_SETUP["Session Setup\nphase: build\nstage: task-select · task_id\ndetect test command"]:::stage

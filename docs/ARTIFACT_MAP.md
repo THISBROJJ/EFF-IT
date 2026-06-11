@@ -6,7 +6,7 @@ Companion to `docs/SDLC_FLOWCHART.md`. Focuses on **what is written, by whom, an
 
 > Render in any Mermaid-aware viewer (GitHub, VS Code + Mermaid Preview, mermaid.live).
 
-The harness splits into two commands: **`/design`** writes the four durable repo-root docs (`SPEC.md`, `CONCERN.md`, `ARCHITECTURE.md`, `PLAN.md`) and opens a design PR, then stops; **`/fast-lane`** runs once per task, building it from the master root `PLAN.md` through a session-scoped working slice.
+The harness splits into two commands: **`/draft-design-docs`** writes the four durable repo-root docs (`SPEC.md`, `CONCERN.md`, `ARCHITECTURE.md`, `PLAN.md`) and opens a design PR, then stops; **`/build-task`** runs once per task, building it from the master root `PLAN.md` through a session-scoped working slice.
 
 ---
 
@@ -21,11 +21,11 @@ flowchart TD
     classDef hook     fill:#B71C1C,stroke:#7F0000,color:#fff
     classDef obs      fill:#37474F,stroke:#263238,color:#fff
 
-    subgraph DESIGN ["/design — design half (writes durable root docs, opens PR, stops)"]
+    subgraph DESIGN ["/draft-design-docs — design half (writes durable root docs, opens PR, stops)"]
         direction TB
 
         %% ── Design Session Init ───────────────────────────────────────────────
-        DSESSION["session setup\n/design"]:::cmd
+        DSESSION["session setup\n/draft-design-docs"]:::cmd
         DSESSION -->|"creates"| CURR_RUN{{".current_run"}}:::artifact
         DSESSION -->|"initial write\nphase=design"| DCHK[("checkpoint.json ↺\nphase · stage · slug\nfeature_types")]:::loop
 
@@ -66,11 +66,11 @@ flowchart TD
         DSESSION -->|"cleared at plan-ready"| CURR_RUN
     end
 
-    subgraph BUILD ["/fast-lane — build half (one buildable task per run)"]
+    subgraph BUILD ["/build-task — build half (one buildable task per run)"]
         direction TB
 
         %% ── Task Pick + Build Session Init ────────────────────────────────────
-        MPLAN -->|"pick task: status≠DONE\nAND depends_on all DONE"| BSESSION["session setup\n/fast-lane"]:::cmd
+        MPLAN -->|"pick task: status≠DONE\nAND depends_on all DONE"| BSESSION["session setup\n/build-task"]:::cmd
         BSESSION -->|"creates"| CURR_RUN
         BSESSION -->|"initial write\nphase=build"| BCHK[("checkpoint.json ↺\nphase · stage")]:::loop
         BSESSION --> BGIT["git-expert\nfeat/{task-slug}"]:::agent
@@ -115,7 +115,7 @@ flowchart TD
         SECRV -->|"findings"| PROB
 
         %% ── Flip master task status ───────────────────────────────────────────
-        KAREN -->|"PASS"| FLIP["/fast-lane\nflip status: DONE + pr:"]:::cmd
+        KAREN -->|"PASS"| FLIP["/build-task\nflip status: DONE + pr:"]:::cmd
         SECRV -->|"clean"| FLIP
         FLIP -->|"one write per task"| MPLAN
 
@@ -140,7 +140,7 @@ flowchart TD
     PROG -.->|"triggers auto-commit"| AC
 
     %% ── Resume ────────────────────────────────────────────────────────────────
-    DCHK -.->|"phase + stage → re-entry point"| RESUME["/resume"]:::cmd
+    DCHK -.->|"phase + stage → re-entry point"| RESUME["/resume-run"]:::cmd
     BCHK -.->|"phase + stage → re-entry point"| RESUME
 ```
 
@@ -158,7 +158,7 @@ flowchart LR
 
     subgraph LOOP1 ["↺ Loop 1 — session PLAN.md (implementation retry)"]
         direction TB
-        FASTLANE1["/fast-lane"]:::cmd
+        FASTLANE1["/build-task"]:::cmd
         SPLAN1[("PLAN.md · SESSION")]:::loop
         KAREN1["karen"]:::agent
         SECRV1["security-reviewer"]:::agent
@@ -174,11 +174,11 @@ flowchart LR
 
     subgraph LOOP2 ["↺ Loop 2 — checkpoint.json (resume handover)"]
         direction TB
-        SESSION2["session setup\n/design · /fast-lane"]:::cmd
+        SESSION2["session setup\n/draft-design-docs · /build-task"]:::cmd
         CHK2[("checkpoint.json")]:::loop
         CONCERN2["concern-resolver"]:::agent
         STAGE2["each pipeline stage"]:::cmd
-        RESUME2["/resume"]:::cmd
+        RESUME2["/resume-run"]:::cmd
 
         SESSION2  -->|"initial write: phase + stage"| CHK2
         CONCERN2  -->|"writes feature_types back"| CHK2
@@ -205,13 +205,13 @@ flowchart LR
 
 | Artifact | Path | Written by | Read by | Loop? |
 |---|---|---|---|---|
-| `.current_run` | `.current_run` | session setup (`/design`, `/fast-lane`) | `log_tool_call.sh` (routes log destination), `karen`, `security-reviewer`, `session-keeper` | No — cleared at `plan-ready` (design) / `done` (build) |
-| `checkpoint.json` | `sessions/<run_id>/checkpoint.json` | session setup (initial, sets `phase`); every stage transition (stage field); `concern-resolver` (feature_types) | `/resume` (reads `phase` + `stage` for re-entry), `session-keeper` (seeds PROGRESS_TRACKER header) | **↺ Yes** — `concern-resolver` writes `feature_types` back; `/resume` reads `phase` + `stage` to re-enter |
+| `.current_run` | `.current_run` | session setup (`/draft-design-docs`, `/build-task`) | `log_tool_call.sh` (routes log destination), `karen`, `security-reviewer`, `session-keeper` | No — cleared at `plan-ready` (design) / `done` (build) |
+| `checkpoint.json` | `sessions/<run_id>/checkpoint.json` | session setup (initial, sets `phase`); every stage transition (stage field); `concern-resolver` (feature_types) | `/resume-run` (reads `phase` + `stage` for re-entry), `session-keeper` (seeds PROGRESS_TRACKER header) | **↺ Yes** — `concern-resolver` writes `feature_types` back; `/resume-run` reads `phase` + `stage` to re-enter |
 | `SPEC.md` (root) | `SPEC.md` | `spec-drafter` | `concern-resolver`, `architect` (Trigger A), `orchestrator`, `implementation-loop`, `karen`, `security-reviewer`, `unit-test-writer` | No — durable/committed; write-once, read-many |
 | `CONCERN.md` (root) | `CONCERN.md` | `concern-resolver` (from root SPEC.md) | `architect` (Trigger A), `orchestrator` (folds Architect Checklist into security tasks), `security-reviewer` (Review Checklist) | No — durable/committed; but `feature_types` extracted here are written back to `checkpoint.json` |
 | `ARCHITECTURE.md` (root) | `ARCHITECTURE.md` | `architect` Trigger A (Architecture Draft, before orchestrator); `architect` Trigger B (appends as-built at finalization) | `orchestrator` (aligns task scopes); permanent design record for humans and future runs | No — single durable doc; Trigger A writes, Trigger B appends |
-| `PLAN.md` (master, root) | `PLAN.md` | `orchestrator` (initial master tasklist, every task `status: TODO`, empty `pr:`, `finalized: false`); `/fast-lane` (flips `status: DONE` + `pr:` per task; sets `finalized`) | `/fast-lane` (picks buildable task: status≠DONE AND all `depends_on` DONE; seeds session slice) | No — durable/committed; one status/pr flip per task, not a tight loop |
-| `PLAN.md` (session) | `sessions/<run_id>/PLAN.md` | `/fast-lane` (seeds working slice from picked master task); `karen` (punch list on PARTIAL/FAIL); `security-reviewer` (remediation tasks on FINDINGS) | `implementation-loop` (re-reads each iteration) | **↺ Yes** — per-task working slice; `karen` and `security-reviewer` append; `implementation-loop` re-reads |
+| `PLAN.md` (master, root) | `PLAN.md` | `orchestrator` (initial master tasklist, every task `status: TODO`, empty `pr:`, `finalized: false`); `/build-task` (flips `status: DONE` + `pr:` per task; sets `finalized`) | `/build-task` (picks buildable task: status≠DONE AND all `depends_on` DONE; seeds session slice) | No — durable/committed; one status/pr flip per task, not a tight loop |
+| `PLAN.md` (session) | `sessions/<run_id>/PLAN.md` | `/build-task` (seeds working slice from picked master task); `karen` (punch list on PARTIAL/FAIL); `security-reviewer` (remediation tasks on FINDINGS) | `implementation-loop` (re-reads each iteration) | **↺ Yes** — per-task working slice; `karen` and `security-reviewer` append; `implementation-loop` re-reads |
 | `docs/SPEC.md` | `docs/SPEC.md` | `spec-keeper` (at finalization, append-only, idempotent) | Human / future pipeline runs (cross-cycle feature log) | No — append-only; idempotent re-appends |
 | `PROBLEMS.md` | `sessions/<run_id>/PROBLEMS.md` | `karen` (PARTIAL/FAIL); `security-reviewer` (FINDINGS) | `implementation-loop` (retry context) | **↺ Yes** — session-scoped, multi-writer, append-only; `implementation-loop` re-reads on next cycle |
 | `PROGRESS_TRACKER.md` | `sessions/<run_id>/PROGRESS_TRACKER.md` | `session-keeper` (sole writer, append-only) | `evaluate-run` (extracts agent traces), `session-autocommit.sh` (triggers auto-commit on every write) | No — but auto-commit hook fires on every write |
@@ -220,7 +220,7 @@ flowchart LR
 | `audits/task-slug.md` | `sessions/<run_id>/audits/<task-slug>.md` | `karen` (when active run context exists) | Human review only | No |
 | `traces/<agent>.md` | `sessions/<run_id>/traces/<agent_name>.md` | `evaluate-run` (extracts blocks from PROGRESS_TRACKER) | `agent-evaluator` | No — temp; left in place after run |
 | `traces/<agent>.json` | `sessions/<run_id>/traces/<agent_name>.json` | `agent-evaluator` | `evaluate-run` (reads score + verdict to populate EVALUATION.md) | No — but part of a tight read-write loop within `evaluate-run` |
-| `EVALUATION.md` | `sessions/<run_id>/EVALUATION.md` | `evaluate-run` | `/fast-lane` (appends one-line summary to PROGRESS_TRACKER) | No — idempotent; re-runs overwrite |
+| `EVALUATION.md` | `sessions/<run_id>/EVALUATION.md` | `evaluate-run` | `/build-task` (appends one-line summary to PROGRESS_TRACKER) | No — idempotent; re-runs overwrite |
 
 ---
 
