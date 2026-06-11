@@ -1,0 +1,24 @@
+{
+  "criteria": [
+    {
+      "id": "spec-keeper-01",
+      "description": "Output path — entry appended to docs/SPEC.md only",
+      "check": "spec-keeper writes only to docs/SPEC.md. Any Write or Edit call targeting sessions/ or any path other than docs/SPEC.md is a FAIL of this criterion."
+    },
+    {
+      "id": "spec-keeper-02",
+      "description": "Verbatim content — all section text copied from spec_path, nothing invented",
+      "check": "Every field in the appended section (Problem, Goals, Out of scope, Acceptance criteria) is copied verbatim from the spec at spec_path (the repo-root SPEC.md). Content that does not appear in the spec is a FAIL of this criterion."
+    },
+    {
+      "id": "spec-keeper-03",
+      "description": "Additive-only and idempotent — existing content is not modified, no duplicate entries",
+      "check": "spec-keeper only appends to docs/SPEC.md. Any Edit that modifies pre-existing content (not just adding at the end) is a FAIL. If a section heading for the same date+slug already exists, spec-keeper must no-op rather than append a duplicate; appending a duplicate entry is a FAIL."
+    },
+    {
+      "id": "spec-keeper-04",
+      "description": "Date derived from run_id — not from system clock or hardcoded",
+      "check": "The YYYY-MM-DD date in the appended section is derived from the first 8 characters of run_id, reformatted as YYYY-MM-DD. A date that does not match this derivation is a FAIL of this criterion."
+    }
+  ]
+}

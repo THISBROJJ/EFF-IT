@@ -1,6 +1,6 @@
 ---
 name: spec-drafter
-description: Converts a refined idea or problem statement into a formal spec at sessions/<run_id>/SPEC.md. Invoke after idea-interrogator finishes; do not invoke for bug fixes or small tasks.
+description: Converts a refined idea or problem statement into a formal spec at the repo-root SPEC.md. Invoke after idea-interrogator finishes; do not invoke for bug fixes or small tasks.
 type: specialist
 model: opus
 allowed-tools: [Read, Write, Glob]
@@ -20,8 +20,10 @@ You will receive:
 ## Output
 
 1. Derive `<slug>` as kebab-case of the feature title (e.g., `user-auth-flow`).
-2. Write the spec to `sessions/<run_id>/SPEC.md`.
-3. Return the file path.
+2. Write the spec to the repo-root `SPEC.md`. This is the current design's spec — a
+   durable, project-level doc. A later `/design` cycle overwrites it (the permanent
+   cross-cycle log lives at `docs/SPEC.md`, maintained by `spec-keeper`).
+3. Return the file path and the derived `slug`.
 
 ## Spec format
 
@@ -48,7 +50,7 @@ You will receive:
 ## Acceptance criteria
 - AC-01: <observable, testable criterion — verifiable from code or running the feature>
 
-<!-- AC format is defined in `ARCHITECTURE.md` — see Cross-agent contracts. -->
+<!-- AC format is defined in `.claude/HARNESS.md` — see Cross-agent contracts. -->
 
 ## Components
 - `<name>` — [frontend | backend | API | CLI | service | config | test | infra]

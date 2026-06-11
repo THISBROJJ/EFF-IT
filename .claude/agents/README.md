@@ -47,9 +47,9 @@ The agent's `name:` frontmatter field is what identifies it to Claude Code, not 
 | Agent | Role |
 |---|---|
 | `orchestrator` | Decomposes a spec into a task plan |
-| `concern-resolver` | Scans the spec for security trigger keywords, merges in app-type profiles |
-| `architect` | Drafts/updates architecture docs; read-only during plan review |
-| `spec-drafter` | Writes the session SPEC.md from interrogation output |
+| `concern-resolver` | Scans the root SPEC.md for security trigger keywords, merges in app-type profiles → root CONCERN.md |
+| `architect` | Drafts the root ARCHITECTURE.md before the plan; appends as-built at finalization; read-only during plan review |
+| `spec-drafter` | Writes the root SPEC.md from interrogation output |
 | `coder` | Implements a single task from the plan |
 | `unit-test-writer` | Generates failing tests targeting ≥90% coverage (TDD red phase) |
 | `test-runner` | Runs the test suite; reports pass/fail/blocked |
@@ -58,3 +58,4 @@ The agent's `name:` frontmatter field is what identifies it to Claude Code, not 
 | `git-expert` | Branching, committing, pushing, PR creation |
 | `session-keeper` | Owns `sessions/<run_id>/PROGRESS_TRACKER.md` exclusively — appends one entry per agent completion |
 | `agent-evaluator` | Scores each agent's trace against its `criteria.json`, emits per-agent verdict JSON |
+| `spec-keeper` | Appends a dated summary of the root `SPEC.md` to the cross-cycle log `docs/SPEC.md` at build finalization (idempotent) |

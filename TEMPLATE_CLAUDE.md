@@ -50,7 +50,7 @@ Three surfaces, three roles. Each capability lives in exactly one.
 
 | Surface | Invoked by | Lives in | Use for |
 |---|---|---|---|
-| Command | User typing `/<name>` | `.claude/commands/` | Workflow orchestrators that manage other agents or pause for user input (e.g. `/run`, `/fast-lane`, `/resume`, `/evaluate-run`, `/idea-interrogator`, `/implementation-loop`) |
+| Command | User typing `/<name>` | `.claude/commands/` | Workflow orchestrators that manage other agents or pause for user input (e.g. `/design`, `/fast-lane`, `/resume`, `/evaluate-run`, `/idea-interrogator`, `/implementation-loop`) |
 | Skill | User typing `/<name>` **or** model auto-match against the description | `.claude/skills/<name>/` | Reusable bounded capabilities with a clear input/output (e.g. `spec-drafter`, `architect`, `git-*`, `unit-test-writer`, `pr-decomposition`) |
 | Agent | Spawned programmatically via the `Agent` tool by a command/skill | `.claude/agents/<name>/` | Pipeline workers that do one job and return a structured result |
 
@@ -80,15 +80,20 @@ Use `/git-branch`, `/git-commit`, `/git-pr` for these tasks.
 
 ## 8. Session artifacts
 
-Pipeline runs write all artifacts to `sessions/<run_id>/` (e.g. `sessions/YYYYMMDD-HHMM/`). These are local-only — excluded via `.git/info/exclude`, never committed.
+Durable **project** design docs are committed at the repo root: `SPEC.md`, `CONCERN.md`,
+`ARCHITECTURE.md`, `PLAN.md` (the master tasklist). The cross-cycle feature log is `docs/SPEC.md`.
 
-`checkpoint.json` in each session directory tracks the current pipeline stage. Use `/resume <run_id>` to continue an interrupted run.
+**Ephemeral** per-run telemetry (`checkpoint.json`, per-task working `PLAN.md`,
+`PROGRESS_TRACKER.md`, `PROBLEMS.md`, `EVALUATION.md`, `traces/`) is written to
+`sessions/<run_id>/` — local-only, excluded via `.git/info/exclude`, never committed.
+
+`checkpoint.json` tracks the current stage and `phase` (`design` or `build`). Use `/resume <run_id>` to continue an interrupted run.
 
 ---
 
 ## 9. Architecture reference
 
-See [`ARCHITECTURE.md`](./ARCHITECTURE.md) for the full project architecture and harness design: hooks, agents, commands topology, session structure, and pipeline flow.
+See [`ARCHITECTURE.md`](./ARCHITECTURE.md) for the project architecture (produced and updated by `/design`). See [`.claude/HARNESS.md`](./.claude/HARNESS.md) for the harness design: hooks, agents, commands topology, artifact locations, and pipeline flow.
 
 ---
 
@@ -105,6 +110,6 @@ app_types:
 Accepted values (must match a filename in `security/profiles/` without `.md`):
 `database`, `rag`, `ai_agent`, `web_app`, `api`, `frontend`, `networking`, `search`, `security_tool`
 
-**How it works:** The `concern-resolver` agent (runs between orchestrate and architect) loads each listed profile and unions its checklists with any trigger-keyword matches from SPEC.md. The merged result is written to `sessions/<run_id>/SECURITY_CONCERNS.md`.
+**How it works:** During `/design`, the `concern-resolver` agent (runs after spec-drafter, before the architect) loads each listed profile and unions its checklists with any trigger-keyword matches from the root `SPEC.md`. The merged result is written to the repo-root `CONCERN.md`.
 
-**If absent or empty:** concern-resolver still runs keyword-only detection from SPEC.md, but app-type profile checklists are skipped. A warning is emitted in SECURITY_CONCERNS.md.
+**If absent or empty:** concern-resolver still runs keyword-only detection from `SPEC.md`, but app-type profile checklists are skipped. A warning is emitted in `CONCERN.md`.

@@ -1,6 +1,6 @@
 ---
 name: concern-resolver
-description: Scans SPEC.md for security trigger keywords and app_types from CLAUDE.md, then writes SECURITY_CONCERNS.md to the session directory. Run after spec-drafter, before architect.
+description: Scans SPEC.md for security trigger keywords and app_types from CLAUDE.md, then writes CONCERN.md to the repo root. Run after spec-drafter, before architect.
 type: transformer
 model: sonnet
 allowed-tools: [Read, Write, Glob, Bash]
@@ -8,19 +8,19 @@ allowed-tools: [Read, Write, Glob, Bash]
 
 # Concern Resolver
 
-You receive `run_id` and `spec_path`. Your job is to produce
-`sessions/{run_id}/SECURITY_CONCERNS.md` and update `checkpoint.json`.
+You receive `run_id` and `spec_path`. Your job is to produce the repo-root
+`CONCERN.md` and update `checkpoint.json`.
 
 ## Inputs
 
 - `run_id` — current session ID (e.g., `20260515-2101`)
-- `spec_path` — path to the spec file (e.g., `sessions/20260515-2101/SPEC.md`)
+- `spec_path` — path to the spec file (the repo-root `SPEC.md`)
 
 ---
 
 ## Step 1 — Read inputs
 
-Read `spec_path`. If the file does not exist, write `SECURITY_CONCERNS.md` with:
+Read `spec_path`. If the file does not exist, write `CONCERN.md` with:
 
 ```
 # Security Concerns — {run_id}
@@ -74,9 +74,9 @@ before comparing. Preserve original casing in the output.
 
 ---
 
-## Step 5 — Write SECURITY_CONCERNS.md
+## Step 5 — Write CONCERN.md
 
-Write `sessions/{run_id}/SECURITY_CONCERNS.md` using this exact structure:
+Write the repo-root `CONCERN.md` using this exact structure:
 
 ```markdown
 # Security Concerns — {run_id}
@@ -144,7 +144,7 @@ other fields.
 
 - Never modify `SPEC.md`, `CLAUDE.md`, or any file under `security/concerns/`
   or `security/profiles/`.
-- Write exactly two files: `sessions/{run_id}/SECURITY_CONCERNS.md` and
+- Write exactly two files: the repo-root `CONCERN.md` and
   `sessions/{run_id}/checkpoint.json`.
 - Do not emit a verdict or audit commentary — output the two files and stop.
 

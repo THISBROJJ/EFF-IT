@@ -2,8 +2,8 @@
   "criteria": [
     {
       "id": "spec-drafter-01",
-      "description": "Spec is written to sessions/<run_id>/SPEC.md, not docs/",
-      "check": "The agent's Write tool call targets a path matching 'sessions/<run_id>/SPEC.md' (e.g., 'sessions/20260518-2347/SPEC.md'). Any Write to a path containing 'docs/' — including 'docs/specs/' — is a FAIL."
+      "description": "Spec is written to the repo-root SPEC.md, not sessions/ or docs/",
+      "check": "The agent's Write tool call targets the repo-root 'SPEC.md'. Any Write to a path under 'sessions/' or containing 'docs/' — including 'docs/specs/' — is a FAIL."
     },
     {
       "id": "spec-drafter-02",

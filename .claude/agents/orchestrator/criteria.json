@@ -12,13 +12,23 @@
     },
     {
       "id": "orch-03",
-      "description": "Plan is written to sessions/<run_id>/PLAN.md",
-      "check": "The trace shows a Write tool call whose target path matches 'sessions/<run_id>/PLAN.md'. The file must not be written to docs/plans/ or any other location."
+      "description": "Plan is written to the repo-root PLAN.md",
+      "check": "The trace shows a Write tool call whose target is the repo-root 'PLAN.md'. The file must not be written under sessions/, docs/plans/, or any other location."
     },
     {
       "id": "orch-04",
       "description": "Every task has a depends_on field (even if empty)",
       "check": "Every task entry in the written plan contains a 'depends_on' key. Its value may be an empty list [] but the key must be present. A task missing 'depends_on' entirely is a FAIL of this criterion."
+    },
+    {
+      "id": "orch-05",
+      "description": "Every task carries status:TODO and an empty pr: field; plan has finalized:false",
+      "check": "Every task entry in the written plan contains 'status: TODO' and a 'pr:' key (empty on first write). The top-level plan contains 'finalized: false'. A task missing either field, a task whose status is not TODO on first write, or a plan missing the finalized flag is a FAIL of this criterion."
+    },
+    {
+      "id": "orch-06",
+      "description": "Security checklist items from CONCERN.md are folded into the plan as tasks",
+      "check": "If the repo-root CONCERN.md has a non-empty '## Architect Checklist', the trace shows CONCERN.md was read and each checklist item appears as a security task (T-S#) interleaved before the relevant feature task — not appended in a trailing section and not omitted. If the checklist is empty or CONCERN.md is absent, this criterion passes trivially."
     }
   ]
 }

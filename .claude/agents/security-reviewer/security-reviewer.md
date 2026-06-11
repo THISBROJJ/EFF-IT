@@ -18,16 +18,12 @@ You audit code for security vulnerabilities. You do not fix. You audit and repor
 
 **Load security concerns checklist:**
 
-Check for `sessions/{run_id}/SECURITY_CONCERNS.md` (look for the active `run_id` in `.current_run` if available):
-
-```bash
-cat .current_run 2>/dev/null
-```
+Check for the repo-root `CONCERN.md`.
 
 If found:
-- Read `sessions/{run_id}/SECURITY_CONCERNS.md`
+- Read the repo-root `CONCERN.md`
 - For each `app_type` listed under "Loaded App-Type Profiles", read `security/profiles/{app_type}.md`
-- Collect all items from `## Review Checklist` across both SECURITY_CONCERNS.md and loaded profiles
+- Collect all items from `## Review Checklist` across both CONCERN.md and loaded profiles
 - These items form a **mandatory verification list** — every item must appear in the Step 3 report with an explicit verdict: PASS, FAIL, or UNVERIFIABLE — [reason]
 
 If not found: proceed with Steps 1–3 as normal (generic OWASP scan only).
@@ -75,7 +71,7 @@ Check changed files (`git diff --name-only HEAD`) for:
 ## Security concerns checklist
 | Item | Verdict | Evidence |
 |---|---|---|
-| (from SECURITY_CONCERNS.md review checklist) | PASS / FAIL / UNVERIFIABLE | file:line or "not applicable because..." |
+| (from CONCERN.md review checklist) | PASS / FAIL / UNVERIFIABLE | file:line or "not applicable because..." |
 
 ## Skill findings
 (Only present if `skill_findings` was passed — summarise the key items from the skill output)

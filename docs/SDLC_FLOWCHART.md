@@ -16,112 +16,124 @@ flowchart TD
     classDef stage    fill:#37474F,stroke:#263238,color:#fff
 
     %% ── Entry Points ──────────────────────────────────────────────────────────
-    RUN["/run [idea]"]:::cmd
-    FAST["/fast-lane [description]"]:::cmd
+    DESIGN["/design [idea]"]:::cmd
+    FAST["/fast-lane [task]"]:::cmd
     RESUME["/resume [run_id]"]:::cmd
 
-    %% ── Pre-flight ────────────────────────────────────────────────────────────
-    RUN  --> PREFLIGHT{"clean main?"}:::decision
-    FAST --> PREFLIGHT
-    PREFLIGHT -- "No"  --> STOP["Stop — commit / stash first"]:::stage
-    PREFLIGHT -- "Yes" --> SESSION_SETUP
-
-    %% ── Session Setup ─────────────────────────────────────────────────────────
-    SESSION_SETUP["Session Setup\nrun_id = YYYYMMDD-HHmm"]:::stage
-    SESSION_SETUP --> CURR_RUN[(".current_run")]:::artifact
-    SESSION_SETUP --> CHK[("checkpoint.json\nstage: interrogate")]:::artifact
-
-    %% ── Interrogation Gate ────────────────────────────────────────────────────
-    CHK --> GATE{"entry point?"}:::decision
-    GATE -- "/run"       --> INTERROGATE["idea-interrogator\n(interactive)"]:::agent
-    INTERROGATE          --> SPEC_AGENT["spec-drafter agent"]:::agent
-    SPEC_AGENT           --> SPEC_MD
-
-    GATE -- "/fast-lane" --> MINIMAL["write minimal SPEC.md\nfrom description"]:::stage
-    MINIMAL              --> SPEC_MD
-
-    SPEC_MD[("sessions/{run_id}/SPEC.md")]:::artifact
-
-    %% ── Branch ────────────────────────────────────────────────────────────────
-    SPEC_MD      --> GIT_BR["git-expert agent\ncreate feat/{slug}"]:::agent
-    GIT_BR       --> BRANCH[("feat/{slug} branch\ncheckpoint: stage=branch")]:::artifact
-
-    %% ── Orchestrate ───────────────────────────────────────────────────────────
-    BRANCH       --> ORCH["orchestrator agent"]:::agent
-    ORCH         --> PLAN[("sessions/{run_id}/PLAN.md\ncheckpoint: stage=concern")]:::artifact
-
-    %% ── Security Concerns ─────────────────────────────────────────────────────
-    PLAN         --> CONCERN["concern-resolver agent"]:::agent
-    CONCERN      --> SEC_CONCERNS[("sessions/{run_id}/\nSECURITY_CONCERNS.md\ncheckpoint: stage=architect")]:::artifact
-
-    %% ── Architecture Draft (run only) ─────────────────────────────────────────
-    SEC_CONCERNS --> ARCH_Q{"arch draft?"}:::decision
-    ARCH_Q -- "/run"       --> ARCH_A["architect agent\nTrigger A — Draft"]:::agent
-    ARCH_A                 --> SESS_ARCH[("sessions/{run_id}/\nARCHITECTURE.md")]:::artifact
-    ARCH_A                 --> PROG_INIT["init PROGRESS_TRACKER.md"]:::stage
-    PROG_INIT              --> PROG_MD[("sessions/{run_id}/\nPROGRESS_TRACKER.md\ncheckpoint: stage=implement")]:::artifact
-    SESS_ARCH              --> IMPL_ENTRY
-    PROG_MD                --> IMPL_ENTRY
-    ARCH_Q -- "/fast-lane" --> IMPL_ENTRY
-
-    %% ── Implementation Loop ───────────────────────────────────────────────────
-    IMPL_ENTRY(["↻  Implementation Loop  ↻\nmax 5 iterations"]):::stage
-
-    subgraph IMPL ["  Implementation Loop (per task, per iteration)  "]
+    %% ══════════════════════════════════════════════════════════════════════════
+    %% DESIGN HALF — stays on main, produces root docs, opens design PR, stops
+    %% ══════════════════════════════════════════════════════════════════════════
+    subgraph DESIGN_HALF ["  /design — Design Half (on main → design PR)  "]
         direction TB
-        UTW["unit-test-writer agent\n(Haiku / Sonnet / Opus advisor)"]:::agent
-        UTW  --> T_FILES[("tests/ — new test files\n[immutable once written]")]:::artifact
-        T_FILES --> CODER["coder agent\n(Sonnet)"]:::agent
-        CODER   --> SRC[("src/ changes")]:::artifact
-        SRC     --> TR["test-runner agent"]:::agent
-        TR      --> TQ{"tests pass?"}:::decision
-        TQ -- "FAIL\n(≤5 retries)" --> CODER
-        TQ -- "PASS"               --> SK["session-keeper agent"]:::agent
-        SK      --> PROG_ENTRY[("PROGRESS_TRACKER.md\nentry appended\n→ auto-committed by hook")]:::artifact
+
+        D_PRE{"clean main?"}:::decision
+        D_PRE -- "No"  --> D_STOP["Stop — commit / stash first"]:::stage
+        D_PRE -- "Yes" --> D_SETUP["Session Setup\nphase: design\nstage: interrogate"]:::stage
+        D_SETUP --> D_CHK[("sessions/{run_id}/checkpoint.json")]:::artifact
+
+        D_CHK --> INTERROGATE["idea-interrogator\n(interactive)"]:::agent
+        INTERROGATE --> IDEA[("IDEA_SUMMARY\nstage: spec")]:::artifact
+
+        IDEA --> SPEC_AGENT["spec-drafter agent"]:::agent
+        SPEC_AGENT --> SPEC_MD[("SPEC.md (repo root)\nstage: concern")]:::artifact
+
+        SPEC_MD --> CONCERN_AGENT["concern-resolver agent\n(reads root SPEC.md)"]:::agent
+        CONCERN_AGENT --> CONCERN_MD[("CONCERN.md (repo root)\nupdates feature_types\nstage: architect")]:::artifact
+
+        CONCERN_MD --> ARCH_A["architect agent — Trigger A\n(reads SPEC.md + CONCERN.md,\nNO plan — runs BEFORE orchestrator)"]:::agent
+        ARCH_A --> ARCH_MD[("ARCHITECTURE.md (repo root)\nstage: orchestrate")]:::artifact
+
+        ARCH_MD --> ORCH["orchestrator agent\n(reads SPEC + CONCERN + ARCHITECTURE;\nfolds Architect Checklist → security tasks)"]:::agent
+        ORCH --> PLAN_MASTER[("PLAN.md (repo root) — master\nevery task status: TODO, pr: empty\nfinalized: false · stage: publish")]:::artifact
+
+        PLAN_MASTER --> D_GIT["git-expert agent\nbranch docs/design-{slug}\ncommit 4 root docs · open design PR"]:::agent
+        D_GIT --> D_DONE["stage: plan-ready\nrm .current_run\nSTOP — user reviews + merges PR"]:::stage
     end
 
-    IMPL_ENTRY --> UTW
-    PROG_ENTRY --> KAREN
+    DESIGN --> D_PRE
 
-    %% ── Completion Audit ──────────────────────────────────────────────────────
-    KAREN["karen agent\n[completion auditor — Opus]"]:::agent
-    KAREN --> KAREN_V{"verdict?"}:::decision
-    KAREN_V -- "PARTIAL / FAIL" --> PROB_K[("PROBLEMS.md\npunch list appended to PLAN.md")]:::artifact
-    PROB_K --> IMPL_ENTRY
-    KAREN_V -- "PASS" --> EVAL
+    %% ══════════════════════════════════════════════════════════════════════════
+    %% BUILD HALF — once per task, re-invoked for the next
+    %% ══════════════════════════════════════════════════════════════════════════
+    subgraph BUILD_HALF ["  /fast-lane — Build Half (once per task → atomic PR)  "]
+        direction TB
 
-    %% ── Evaluate Run ──────────────────────────────────────────────────────────
-    EVAL["evaluate-run\n(agent-evaluator per trace)"]:::stage
-    EVAL --> EVAL_MD[("sessions/{run_id}/EVALUATION.md\nper-agent scores + overall verdict")]:::artifact
+        B_PRE{"clean main?"}:::decision
+        B_PRE -- "No"  --> B_STOP["Stop — commit / stash first"]:::stage
+        B_PRE -- "Yes" --> B_READ["read root PLAN.md"]:::stage
+        B_READ --> B_PLANQ{"PLAN.md present?"}:::decision
+        B_PLANQ -- "No" --> B_NOPLAN["Tell user to run /design"]:::stage
+        B_PLANQ -- "Yes" --> B_SELECT["select BUILDABLE task\nstatus != DONE AND deps DONE\nask user · warn on blocked"]:::stage
 
-    %% ── Architect Update (run only) ───────────────────────────────────────────
-    EVAL_MD --> ARCH_B_Q{"arch update?"}:::decision
-    ARCH_B_Q -- "/run"       --> ARCH_B["architect agent\nTrigger B — Update root"]:::agent
-    ARCH_B                   --> ROOT_ARCH[("ARCHITECTURE.md\n(repo root)")]:::artifact
-    ROOT_ARCH                --> SECRV
-    ARCH_B_Q -- "/fast-lane" --> SECRV
+        B_SELECT --> B_SETUP["Session Setup\nphase: build\nstage: task-select · task_id\ndetect test command"]:::stage
+        B_SETUP --> B_CHK[("sessions/{run_id}/checkpoint.json")]:::artifact
 
-    %% ── Security Review ───────────────────────────────────────────────────────
-    SECRV["security-reviewer agent\n(OWASP + SECURITY_CONCERNS checklist)"]:::agent
-    SECRV --> SECV{"verdict?"}:::decision
-    SECV -- "FINDINGS" --> PROB_S[("PROBLEMS.md\nfindings appended to PLAN.md")]:::artifact
-    PROB_S --> IMPL_ENTRY
-    SECV -- "PASS" --> GIT_WRAP
+        B_CHK --> B_GIT_BR["git-expert agent\nbranch feat/{task-slug} from main"]:::agent
+        B_GIT_BR --> B_SLICE["write per-task working slice"]:::stage
+        B_SLICE --> SLICE_MD[("sessions/{run_id}/PLAN.md\n(chosen task only — loop mutates THIS)\nstage: branch / implement")]:::artifact
 
-    %% ── Git Wrap-up ───────────────────────────────────────────────────────────
-    GIT_WRAP["git-expert agent\ncommit → push → PR"]:::agent
-    GIT_WRAP --> PR_OUT[("GitHub PR → main\nConventional Commit message")]:::artifact
-    PR_OUT   --> DONE["stage: done\nrm .current_run"]:::stage
+        SLICE_MD --> IMPL_ENTRY(["↻  Implementation Loop  ↻\nPLAN_PATH = session slice\nSPEC_PATH = root SPEC.md\nmax 5 iterations"]):::stage
 
-    %% ── Resume Entry ──────────────────────────────────────────────────────────
-    RESUME   --> R_CHK[("sessions/{run_id}/checkpoint.json")]:::artifact
-    R_CHK    --> R_AT["validate + restore context\nswitch to feat/{slug} branch"]:::stage
-    R_AT -.->|"stage: orchestrate"| ORCH
-    R_AT -.->|"stage: concern"    | CONCERN
-    R_AT -.->|"stage: implement"  | IMPL_ENTRY
-    R_AT -.->|"stage: audit"      | KAREN
-    R_AT -.->|"stage: security"   | SECRV
-    R_AT -.->|"stage: git"        | GIT_WRAP
+        subgraph IMPL ["  Implementation Loop (per iteration)  "]
+            direction TB
+            UTW["unit-test-writer agent"]:::agent
+            UTW --> T_FILES[("tests/ — new test files\n[immutable once written]")]:::artifact
+            T_FILES --> CODER["coder agent"]:::agent
+            CODER --> SRC[("src/ changes")]:::artifact
+            SRC --> TR["test-runner agent"]:::agent
+            TR --> TQ{"tests pass?"}:::decision
+            TQ -- "FAIL (≤5 retries)" --> CODER
+            TQ -- "PASS" --> SK["session-keeper agent"]:::agent
+            SK --> PROG_ENTRY[("PROGRESS_TRACKER.md\nentry appended → auto-committed")]:::artifact
+        end
+
+        IMPL_ENTRY --> UTW
+        PROG_ENTRY --> KAREN
+
+        KAREN["karen agent\n(audits vs root SPEC.md)"]:::agent
+        KAREN --> KAREN_V{"verdict?"}:::decision
+        KAREN_V -- "PARTIAL / FAIL" --> PROB_K[("punch list → session PLAN.md\n(loop back)")]:::artifact
+        PROB_K --> IMPL_ENTRY
+        KAREN_V -- "PASS" --> EVAL["evaluate-run\n(stage: security)"]:::stage
+
+        EVAL --> EVAL_MD[("sessions/{run_id}/EVALUATION.md")]:::artifact
+        EVAL_MD --> SECRV["security-reviewer agent\n(OWASP + root CONCERN.md checklist)"]:::agent
+        SECRV --> SECV{"verdict?"}:::decision
+        SECV -- "FINDINGS" --> PROB_S[("findings → session PLAN.md + PROBLEMS.md\n(loop back)")]:::artifact
+        PROB_S --> IMPL_ENTRY
+        SECV -- "PASS" --> FLIP["flip task status: DONE + pr:\nin master root PLAN.md\nstage: git"]:::stage
+
+        FLIP --> FINAL_Q{"last task DONE\n& not finalized?"}:::decision
+        FINAL_Q -- "Yes" --> FINAL["architect Trigger B → ARCHITECTURE.md (as-built)\nspec-keeper → docs/SPEC.md (cross-cycle log)\nset finalized: true"]:::agent
+        FINAL --> B_GIT_WRAP
+        FINAL_Q -- "No" --> B_GIT_WRAP
+
+        B_GIT_WRAP["git-expert agent\ncommit task code + PLAN.md status\n(+ finalization) · push · one atomic PR"]:::agent
+        B_GIT_WRAP --> B_PR[("GitHub PR → main")]:::artifact
+        B_PR --> B_DONE["stage: done\nrm .current_run"]:::stage
+    end
+
+    FAST --> B_PRE
+
+    %% ── Resume Entry (dots into BOTH stage machines) ───────────────────────────
+    RESUME --> R_CHK[("sessions/{run_id}/checkpoint.json")]:::artifact
+    R_CHK --> R_PHASE{"phase?"}:::decision
+
+    R_PHASE -. "design" .-> R_DESIGN["restore design context"]:::stage
+    R_DESIGN -.->|"interrogate"| INTERROGATE
+    R_DESIGN -.->|"spec"      | SPEC_AGENT
+    R_DESIGN -.->|"concern"   | CONCERN_AGENT
+    R_DESIGN -.->|"architect" | ARCH_A
+    R_DESIGN -.->|"orchestrate"| ORCH
+    R_DESIGN -.->|"publish"   | D_GIT
+
+    R_PHASE -. "build" .-> R_BUILD["restore build context\nswitch to feat/{task-slug}"]:::stage
+    R_BUILD -.->|"task-select"| B_SELECT
+    R_BUILD -.->|"branch"     | B_GIT_BR
+    R_BUILD -.->|"implement"  | IMPL_ENTRY
+    R_BUILD -.->|"audit"      | KAREN
+    R_BUILD -.->|"security"   | SECRV
+    R_BUILD -.->|"git"        | B_GIT_WRAP
 ```
 
 ---
@@ -162,20 +174,28 @@ flowchart LR
 ## Session Artifact Map
 
 ```
-sessions/
-└── {run_id}/                     ← e.g. 20260515-1430
-    ├── checkpoint.json            ← pipeline stage + metadata (updated each step)
-    ├── SPEC.md                    ← feature specification (source of truth)
-    ├── PLAN.md                    ← task plan; punch lists appended on PARTIAL/FAIL
-    ├── SECURITY_CONCERNS.md       ← triggered concerns + app-type checklists
-    ├── ARCHITECTURE.md            ← proposed architecture for this feature (/run only)
-    ├── PROGRESS_TRACKER.md        ← per-agent I/O log (auto-committed on write)
-    ├── PROBLEMS.md                ← karen punch lists + security findings
-    └── EVALUATION.md              ← agent-evaluator scores per trace
+Repo root (durable, committed — the design docs)
+├── SPEC.md                        ← feature specification (source of truth)
+├── CONCERN.md                     ← triggered concerns + app-type checklists
+├── ARCHITECTURE.md                ← architecture (Trigger A draft → Trigger B as-built)
+└── PLAN.md                        ← master tasklist (status / pr: / finalized: per task)
+
+docs/
+└── SPEC.md                        ← cross-cycle spec log (spec-keeper, append-only)
 
 sessions/
-├── tool-calls-YYYY-MM-DD.jsonl   ← global tool-call audit log (all runs)
-└── .current_run                  ← active run_id (cleared on completion)
+└── {run_id}/                      ← e.g. 20260515-1430 (ephemeral, local-only)
+    ├── checkpoint.json            ← phase (design|build) + stage + metadata
+    ├── PLAN.md                    ← per-task working slice (build loop mutates THIS)
+    ├── PROGRESS_TRACKER.md        ← per-agent I/O log (auto-committed on write)
+    ├── PROBLEMS.md                ← karen punch lists + security findings
+    ├── EVALUATION.md              ← agent-evaluator scores per trace
+    ├── traces/                    ← raw agent trace records
+    └── session_log.json           ← structured session event log
+
+sessions/
+├── tool-calls-YYYY-MM-DD.jsonl    ← global tool-call audit log (all runs)
+└── .current_run                   ← active run_id (cleared on completion)
 ```
 
 ---
