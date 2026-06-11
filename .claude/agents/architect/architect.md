@@ -101,53 +101,44 @@ End with: _"Which of these would you like to explore?"_
 
 ## Architecture Draft Mode
 
-Called by the SDLC pipeline — once after orchestration (Trigger A, pre-implementation) and once after Karen PASS (Trigger B, post-implementation).
+Called by the SDLC pipeline — once during `/design`, before orchestration (Trigger A,
+pre-implementation), and once when `/fast-lane` finalizes a fully-built design (Trigger B,
+post-implementation). The proposed architecture is a durable repo-root doc, so the architect
+runs *before* the task breakdown and informs it (the orchestrator reads `ARCHITECTURE.md`).
 
 ### Trigger A — Pre-implementation
 
-Inputs: `spec_path`, `plan_path`, `slug`
+Inputs: `spec_path`, `concern_path`, `slug`
 
 #### Step 1 — Read context
-Read `spec_path`, `plan_path`, and root `ARCHITECTURE.md` if it exists.
+Read `spec_path` (repo-root `SPEC.md`), `concern_path` (repo-root `CONCERN.md`), and the
+existing repo-root `ARCHITECTURE.md` if present.
 
 #### Step 2 — Write proposed architecture
-Produce `sessions/<run_id>/ARCHITECTURE.md` covering:
+Write (overwrite) the repo-root `ARCHITECTURE.md` covering:
 - Components and their responsibilities
 - Data flow and key interfaces
 - Technology choices with rationale
-- Constraints and risks inherited from the spec
+- Constraints and risks inherited from the spec and from `CONCERN.md`
 
-Return the path.
+This is the project's architecture, not the harness's (the harness self-doc is
+`.claude/HARNESS.md`). Return the path.
 
-#### Step 3 — Inject security tasks (if SECURITY_CONCERNS.md exists)
+Security tasks are NOT injected here — the orchestrator folds `CONCERN.md` checklist items
+into `PLAN.md` when it decomposes (the architect runs before the plan exists).
 
-Check if `sessions/{run_id}/SECURITY_CONCERNS.md` exists:
+### Trigger B — Build finalization
 
-```bash
-test -f sessions/<run_id>/SECURITY_CONCERNS.md && echo "found" || echo "absent"
-```
-
-If found:
-- Read `sessions/{run_id}/SECURITY_CONCERNS.md`
-- Extract each item from `## Architect Checklist`
-- Re-open `sessions/{run_id}/PLAN.md`
-- Interleave each checklist item as a numbered task (`T-S1`, `T-S2`, ...) directly before the first feature task that creates or modifies a file related to that concern's domain — never in a separate section
-- If no domain-specific placement can be determined, insert all unplaced security tasks immediately before the last feature task (so they are always between feature tasks, not appended after)
-- Do not duplicate items already present in PLAN.md (case-insensitive match)
-
-If absent: skip this step and note "No SECURITY_CONCERNS.md found — security tasks not injected."
-
-### Trigger B — Post-implementation
-
-Inputs: `spec_path`, `slug` (implementation is complete; Karen has passed)
+Inputs: `spec_path`, `slug` (the design's final task has passed Karen; see fast-lane finalization)
 
 #### Step 1 — Read context
-Read `sessions/<run_id>/ARCHITECTURE.md` (the proposed design), the source files for all components listed in the spec, and root `ARCHITECTURE.md` if it exists.
+Read the repo-root `ARCHITECTURE.md` (the design written in Trigger A), the source files for
+all components listed in the spec, and the repo-root `SPEC.md`.
 
 #### Step 2 — Update ARCHITECTURE.md
-Append a new section to root `ARCHITECTURE.md` (create it if absent):
+Append an "as-built" section to the repo-root `ARCHITECTURE.md`:
 - What was built and how it fits into the existing system
-- Any deviations from `sessions/<run_id>/ARCHITECTURE.md` and their rationale
+- Any deviations from the Trigger A design and their rationale
 - New interfaces, contracts, or constraints introduced
 
 ---
@@ -155,7 +146,7 @@ Append a new section to root `ARCHITECTURE.md` (create it if absent):
 ## Hard rules
 
 - **Plan Review and Explore modes**: never modify any file.
-- **Architecture Draft mode**: only write to `sessions/<run_id>/ARCHITECTURE.md`, root `ARCHITECTURE.md`, and (Trigger A only) `sessions/{run_id}/PLAN.md` for security task injection — no other files.
+- **Architecture Draft mode**: only write to the repo-root `ARCHITECTURE.md` — no other files.
 - Never write code — describe changes and let coder implement them.
 - Use LANGUAGE.md vocabulary for structural concepts.
 - Use ARCHITECTURE.md vocabulary for domain concepts.

@@ -1,6 +1,6 @@
 ---
 name: orchestrator
-description: Reads a spec at sessions/<run_id>/SPEC.md and produces a structured task plan at sessions/<run_id>/PLAN.md, decomposing work into parallel and sequential groups with agent-type assignments. Invoke after spec-drafter finishes.
+description: Reads the repo-root SPEC.md, CONCERN.md, and ARCHITECTURE.md and produces a structured task plan at the repo-root PLAN.md, decomposing work into parallel and sequential groups with agent-type assignments. Invoke after the architect finishes.
 type: orchestrator
 model: opus
 allowed-tools: [Read, Write, Glob, Grep]
@@ -13,24 +13,35 @@ You do NOT spawn agents. Your only output is the task plan file.
 
 ## Input
 
-You receive `run_id`, `SPEC_PATH` (e.g., `sessions/<run_id>/SPEC.md`), and `SLUG` (kebab-case feature name). Read the spec fully.
+You receive `run_id`, `SPEC_PATH` (the repo-root `SPEC.md`), and `SLUG` (kebab-case feature
+name). Read the spec fully. Also read the repo-root design docs:
 
-Also read, if they exist:
-- `sessions/<run_id>/ARCHITECTURE.md` — proposed architecture from the architect agent; align task scopes and agent assignments with the intended design
+- `ARCHITECTURE.md` — proposed architecture from the architect agent; align task scopes and
+  agent assignments with the intended design
+- `CONCERN.md` — triggered security concerns. Fold every item under its `## Architect
+  Checklist` into the plan as a security task (`id: T-S1`, `T-S2`, …), placed directly
+  before the first feature task that touches that concern's domain — never appended in a
+  separate trailing section. Skip items already covered by a feature task (case-insensitive
+  match). This responsibility moved here from the architect, which now runs before the plan
+  exists.
+
+Also read, if it exists:
 - `sessions/<run_id>/PROBLEMS.md` — problems logged by prior agents; fold any `BLOCKED` or `CRITICAL` entries relevant to this spec into the plan as explicit tasks or open questions before finalizing
 
 ## Output
 
-Write `sessions/<run_id>/PLAN.md`.
+Write the repo-root `PLAN.md` — the durable master tasklist. `/fast-lane` reads it, builds
+one task at a time, and flips each task's `status` to `DONE` when its PR lands.
 Return the plan path when done.
 
 ## Task plan format
 
 ```yaml
 # Task Plan — <Feature Title>
-spec: sessions/<run_id>/SPEC.md
+spec: SPEC.md
 slug: <slug>
 max_iterations: 5
+finalized: false   # set true once the last task is DONE and build finalization has run
 
 parallel_groups:
   - id: P1
@@ -41,11 +52,15 @@ parallel_groups:
         agent: coder
         scope: <file or directory>
         depends_on: []
+        status: TODO   # TODO | DONE — flipped to DONE by /fast-lane when the PR lands
+        pr:            # PR URL, filled in by /fast-lane on completion
       - id: P1-T2
         description: <specific implementation task>
         agent: unit-test-writer
         scope: <test file or directory>
         depends_on: [P1-T1]
+        status: TODO
+        pr:
 
 sequential_groups:
   - id: S1
@@ -56,6 +71,8 @@ sequential_groups:
         agent: coder
         scope: <file>
         depends_on: [P1]
+        status: TODO
+        pr:
 
 acceptance_criteria:
   - id: AC-01
@@ -63,27 +80,30 @@ acceptance_criteria:
     covered_by: [P1-T1]
 ```
 
-<!-- AC format (ID rules, stability, zero-padding) is defined in `ARCHITECTURE.md` — see Cross-agent contracts. -->
+Every task carries `status: TODO` and an empty `pr:` field on first write. The orchestrator
+never sets these to anything but `TODO`/empty — `/fast-lane` owns their lifecycle.
+
+<!-- AC format (ID rules, stability, zero-padding) is defined in `.claude/HARNESS.md` — see Cross-agent contracts. -->
 
 ## Architectural review
 
 After decomposing the spec into tasks:
 
-1. Write the draft plan to `sessions/<run_id>/PLAN.md`.
+1. Write the draft plan to the repo-root `PLAN.md`.
 
 2. Spawn the `architect` agent in Plan Review mode:
-   - Input: `plan_path` (`sessions/<run_id>/PLAN.md`) + `spec_path`
+   - Input: `plan_path` (repo-root `PLAN.md`) + `spec_path` (repo-root `SPEC.md`)
    - The agent checks all tasks against architectural rules and returns APPROVE or REVISE.
 
 3. If the verdict is **REVISE**:
    - Incorporate every violation finding into the task decomposition.
-   - Overwrite `sessions/<run_id>/PLAN.md` with the revised plan.
+   - Overwrite the repo-root `PLAN.md` with the revised plan.
    - Re-spawn architect (max 2 iterations).
    - If violations persist after 2 iterations, annotate each unresolved violation with
      `# ARCH-VIOLATION:` in the task description and finalize the plan as-is.
 
 4. If the verdict is **APPROVE** (or after incorporating revisions):
-   - The plan at `sessions/<run_id>/PLAN.md` is final.
+   - The plan at the repo-root `PLAN.md` is final.
 
 ---
 

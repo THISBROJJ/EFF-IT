@@ -9,11 +9,11 @@ A Claude Code harness that wraps any software project with a full AI-assisted de
 
 Drop this scaffold into any repo and get:
 
-- **`/run`** — full pipeline: interrogate idea → spec → branch → orchestrate → implement → audit → security review → PR
-- **`/fast-lane`** — skip the spec phase, go straight to implementation
-- **`/resume`** — pick up an interrupted run from its last checkpoint
+- **`/design`** — design half: interrogate idea → spec → concern → architect → orchestrate. Writes the durable repo-root design docs (`SPEC.md`, `CONCERN.md`, `ARCHITECTURE.md`, `PLAN.md`) and opens a design PR.
+- **`/fast-lane`** — build half: read the master `PLAN.md`, build one task → implement → audit → security review → atomic PR; flips that task to `DONE`. Re-invoke per task.
+- **`/resume`** — pick up an interrupted design or build run from its last checkpoint
 
-Every run is self-contained under `sessions/{run_id}/` with a `checkpoint.json` tracking pipeline stage, artifacts (SPEC, PLAN, ARCHITECTURE), a per-run tool call log, and a problems log from audits.
+The project's durable design docs live at the repo root; the master `PLAN.md` is the single source of truth for what's built. Ephemeral per-run telemetry (`checkpoint.json`, progress tracker, problems log, evaluation, traces) is self-contained under `sessions/{run_id}/`. The harness's own design is documented in [`.claude/HARNESS.md`](./.claude/HARNESS.md).
 
 ---
 
@@ -22,7 +22,7 @@ Every run is self-contained under `sessions/{run_id}/` with a `checkpoint.json` 
 ```
 .
 ├── .claude/
-│   ├── commands/   — slash-command workflows (/run, /fast-lane, /resume, git-*, etc.)
+│   ├── commands/   — slash-command workflows (/design, /fast-lane, /resume, git-*, etc.)
 │   ├── agents/     — subagents spawned by commands (orchestrator, coder, karen, etc.)
 │   └── hooks/      — lifecycle hooks (logging, secrets scanning, test immutability)
 ├── security/
@@ -69,5 +69,5 @@ The template ships neutral — no `.gitignore` entry for sessions, no default ex
 ## Using it
 
 1. Copy `.claude/`, `sessions/`, `tests/`, `scripts/`, `.github/`, and `.gitignore` into your target repo
-2. Fill in `CLAUDE.md` (project name, stack, test command)
-3. Run `/run` and describe what you want to build
+2. Fill in `CLAUDE.md` (project name, stack, test command). The repo-root `ARCHITECTURE.md` is the project's (written by `/design`); the harness's own design is `.claude/HARNESS.md`.
+3. Run `/design` and describe what you want to build; merge the design PR, then `/fast-lane` to build each task

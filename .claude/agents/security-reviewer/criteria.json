@@ -17,8 +17,8 @@
     },
     {
       "id": "sec-04",
-      "description": "Security concerns checklist items from SECURITY_CONCERNS.md each receive an explicit verdict",
-      "check": "If SECURITY_CONCERNS.md was loaded, every item from its '## Review Checklist' appears in the report with a verdict of PASS, FAIL, or UNVERIFIABLE (with reason). An item present in SECURITY_CONCERNS.md but absent from the report is a FAIL of this criterion. If SECURITY_CONCERNS.md was not found, this criterion is SKIP."
+      "description": "Security concerns checklist items from CONCERN.md each receive an explicit verdict",
+      "check": "If the repo-root CONCERN.md was loaded, every item from its '## Review Checklist' appears in the report with a verdict of PASS, FAIL, or UNVERIFIABLE (with reason). An item present in CONCERN.md but absent from the report is a FAIL of this criterion. If CONCERN.md was not found, this criterion is SKIP."
     }
   ]
 }

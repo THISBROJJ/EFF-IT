@@ -7,9 +7,10 @@ allowed-tools: [Agent, Bash, Read, Write, Glob, Grep]
 
 # Resume
 
-Picks up an interrupted `/run` or `/fast-lane` pipeline from wherever it stopped.
+Picks up an interrupted `/design` or `/fast-lane` pipeline from wherever it stopped.
 Reads `checkpoint.json`, restores context, and re-enters the pipeline at the
-last incomplete stage.
+last incomplete stage. The checkpoint's `phase` field (`design` or `build`) selects which
+stage machine applies.
 
 ---
 
@@ -27,10 +28,10 @@ if [ -f .current_run ]; then
     exit 1
   fi
 
-  # Check 2: run must not already be complete
+  # Check 2: run must not already be complete (build terminal=done, design terminal=plan-ready)
   stage=$(jq -r '.stage' "sessions/${run_id}/checkpoint.json")
-  if [ "$stage" = "done" ]; then
-    echo "Error: run ${run_id} is already complete (stage: done). To start a new run use /run. To examine the completed run, read sessions/${run_id}/."
+  if [ "$stage" = "done" ] || [ "$stage" = "plan-ready" ]; then
+    echo "Error: run ${run_id} is already complete (stage: ${stage}). Start a new design with /design or build the next task with /fast-lane. To examine the run, read sessions/${run_id}/."
     exit 1
   fi
 fi
@@ -61,13 +62,12 @@ If no checkpoint is found: "No checkpoint found for that run_id. Check `sessions
 ## Step 2 — Restore context
 
 Read the checkpoint and extract:
-- `run_id`, `slug`, `stage`, `spec_path`, `plan_path`, `branch`, `iteration`, `max_iterations`
+- `run_id`, `phase`, `slug`, `stage`, `task_id`, `spec_path`, `plan_path`, `branch`, `iteration`, `max_iterations`
 
-Verify the referenced files exist:
-```bash
-test -f sessions/<run_id>/SPEC.md  && echo "SPEC ok"  || echo "SPEC missing"
-test -f sessions/<run_id>/PLAN.md  && echo "PLAN ok"  || echo "PLAN missing"
-```
+Verify the artifacts expected for the current `phase`/`stage` exist (design docs live at the
+repo root; build telemetry under `sessions/<run_id>/`). For example, once past `spec` the
+repo-root `SPEC.md` should exist; for a build run past `branch` the per-task working plan
+`sessions/<run_id>/PLAN.md` should exist.
 
 If critical files are missing, report which ones and stop. Do not attempt to reconstruct them.
 
@@ -77,28 +77,39 @@ Register the active run:
 echo "<run_id>" > .current_run
 ```
 
-Switch to the feature branch if not already on it:
+For a `build`-phase run, switch to the feature branch if not already on it:
 ```bash
 git branch --show-current
 git checkout <branch>   # if not already on it
 ```
+A `design`-phase run stays on `main` until its `publish` stage.
 
 ---
 
 ## Step 3 — Re-enter the pipeline at `stage`
 
+### `phase: design` (re-enters `/design`)
+
 | `stage` value | Resume action |
 |---|---|
-| `interrogate` | Cannot resume — no checkpoint data yet. Start fresh with `/run`. |
-| `spec` | Re-run spec-drafter with context from IDEA_SUMMARY if available |
-| `branch` | Create branch and continue to orchestrate |
-| `orchestrate` | Spawn orchestrator → write PLAN.md, continue to concern |
-| `concern` | Spawn concern-resolver with `run_id` and `spec_path`; update `feature_types` in checkpoint; continue to architect |
-| `architect` | Spawn architect (Trigger A), initialize PROGRESS_TRACKER.md, continue to implement |
+| `interrogate` | Cannot resume — no artifacts yet. Start fresh with `/design`. |
+| `spec` | Re-run spec-drafter with context from IDEA_SUMMARY if available → repo-root `SPEC.md` |
+| `concern` | Spawn concern-resolver (`run_id`, `spec_path`=`SPEC.md`) → `CONCERN.md`; update `feature_types`; continue to architect |
+| `architect` | Spawn architect Trigger A (`SPEC.md` + `CONCERN.md`) → repo-root `ARCHITECTURE.md`; continue to orchestrate |
+| `orchestrate` | Spawn orchestrator (reads `SPEC.md`, `CONCERN.md`, `ARCHITECTURE.md`) → repo-root `PLAN.md`; continue to publish |
+| `publish` | Spawn git-expert: `docs/design-<slug>` branch, commit the four docs, open PR; continue to plan-ready |
+| `plan-ready` | Design complete. Merge the design PR, then run `/fast-lane`. |
+
+### `phase: build` (re-enters `/fast-lane`)
+
+| `stage` value | Resume action |
+|---|---|
+| `task-select` | Re-read root `PLAN.md`; reselect the task (use `task_id` if set), continue to branch |
+| `branch` | Create `feat/<task-slug>`, write the per-task working plan, continue to implement |
 | `implement` | Invoke implementation-loop with current `iteration` as starting point |
-| `audit` | Spawn karen with SPEC.md; on PASS, invoke `/evaluate-run <run_id>` and append its summary to PROGRESS_TRACKER.md, then continue to security |
+| `audit` | Spawn karen with `SPEC.md`; on PASS invoke `/evaluate-run <run_id>` and append its summary to PROGRESS_TRACKER.md, continue to security |
 | `security` | Spawn security-reviewer |
-| `git` | Spawn git-expert for commit/push/PR |
+| `git` | Flip the task's `status`/`pr` in root `PLAN.md`, finalize if it was the last task (architect Trigger B + spec-keeper, guarded by `finalized`), then git-expert commit/push/PR |
 | `done` | "This run is already complete. Nothing to resume." |
 
 For `implement`: pass `iteration` from the checkpoint so the loop doesn't restart from 0.
@@ -107,15 +118,14 @@ For `implement`: pass `iteration` from the checkpoint so the loop doesn't restar
 
 ## Step 4 — Continue normally
 
-From the resumed stage, follow the same logic as `/run` (or `/fast-lane` if the
-run was launched without an interrogation/spec phase) through to completion.
-Update `checkpoint.json` at each stage transition exactly as the originating
-pipeline does.
+From the resumed stage, follow the same logic as the owning command (`/design` for a design
+run, `/fast-lane` for a build run) through to completion. Update `checkpoint.json` at each
+stage transition exactly as the originating pipeline does.
 
 ---
 
 ## Hard rules
 
 - Never re-run a stage that is already past. If `stage` is `audit`, don't re-run implement.
-- Never overwrite SPEC.md or PLAN.md when resuming — they are the source of truth.
+- Never overwrite the repo-root design docs (`SPEC.md`, `CONCERN.md`, `ARCHITECTURE.md`, `PLAN.md`) when resuming — they are the source of truth.
 - If the branch no longer exists, stop and ask the user before creating a new one.

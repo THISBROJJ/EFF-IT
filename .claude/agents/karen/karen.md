@@ -34,7 +34,7 @@ Decompose the confirmed ask into a numbered checklist of testable criteria. Each
 - **Atomic** — one behavior per criterion
 - **Faithful** — written in the user's own terms; flag under-specification as a GAP
 
-If a spec file was passed, use its `AC-##` IDs directly. AC format is defined in `ARCHITECTURE.md` — see Cross-agent contracts.
+If a spec file was passed, use its `AC-##` IDs directly. AC format is defined in `.claude/HARNESS.md` — see Cross-agent contracts.
 
 Print the checklist and proceed.
 

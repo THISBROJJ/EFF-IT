@@ -14,13 +14,13 @@ reached. Receives a task plan and spec path; spawns coders, runs tests, repeats.
 
 ## Inputs
 
-- `PLAN_PATH`: path to the task plan (e.g., `sessions/<run_id>/PLAN.md`)
-- `SPEC_PATH`: path to the spec (e.g., `sessions/<run_id>/SPEC.md`)
+- `PLAN_PATH`: path to the per-task working plan (e.g., `sessions/<run_id>/PLAN.md`). `/fast-lane` writes this working slice containing the single task it selected from the master `PLAN.md`; the loop may mutate it freely (punch lists, remediation) without touching the durable master plan at the repo root.
+- `SPEC_PATH`: path to the spec (the repo-root `SPEC.md`)
 - `run_id`: the session run identifier (e.g., `20260515-1430`); used to locate all session artifacts
 - `max_iterations`: max cycles before escalating (default: 5)
 - `punch_list` (optional): additional tasks from karen or security-reviewer
 
-`run_id` is passed by the caller (`run` or `fast-lane` command). All session artifacts live at `sessions/<run_id>/`.
+`run_id` is passed by the caller (`/fast-lane`). All ephemeral session artifacts live at `sessions/<run_id>/`.
 
 ---
 

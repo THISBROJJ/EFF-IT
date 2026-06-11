@@ -8,12 +8,12 @@
     {
       "id": "spec-keeper-02",
       "description": "Verbatim content — all section text copied from spec_path, nothing invented",
-      "check": "Every field in the appended section (Problem, Goals, Out of scope, Acceptance criteria) is copied verbatim from the session spec at spec_path. Content that does not appear in the session spec is a FAIL of this criterion."
+      "check": "Every field in the appended section (Problem, Goals, Out of scope, Acceptance criteria) is copied verbatim from the spec at spec_path (the repo-root SPEC.md). Content that does not appear in the spec is a FAIL of this criterion."
     },
     {
       "id": "spec-keeper-03",
-      "description": "Additive-only — existing content in docs/SPEC.md is not modified",
-      "check": "spec-keeper only appends to docs/SPEC.md. Any Edit that modifies pre-existing content (not just adding at the end) is a FAIL of this criterion."
+      "description": "Additive-only and idempotent — existing content is not modified, no duplicate entries",
+      "check": "spec-keeper only appends to docs/SPEC.md. Any Edit that modifies pre-existing content (not just adding at the end) is a FAIL. If a section heading for the same date+slug already exists, spec-keeper must no-op rather than append a duplicate; appending a duplicate entry is a FAIL."
     },
     {
       "id": "spec-keeper-04",

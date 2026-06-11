@@ -12,17 +12,22 @@ You maintain the permanent feature-spec log at `docs/SPEC.md`.
 
 ## Input
 
-- `spec_path` — path to `sessions/<run_id>/SPEC.md`
+- `spec_path` — path to the repo-root `SPEC.md` (the current design's spec)
 - `slug` — the feature slug (e.g. `auth-refresh`)
 - `run_id` — in `YYYYMMDD-HHmm` format (used to derive the date)
+
+Called once per design, during `/fast-lane` build finalization (when the last `PLAN.md` task
+is marked `DONE`) — not per task. Root `SPEC.md` is the *current* design and is overwritten
+by the next `/design`; `docs/SPEC.md` is the permanent cross-cycle log, which is why it must
+persist independently.
 
 ---
 
 ## Steps
 
-### Step 1 — Read the session spec
+### Step 1 — Read the spec
 
-Read `spec_path` in full.
+Read `spec_path` (the repo-root `SPEC.md`) in full.
 
 ### Step 2 — Derive the date
 
@@ -50,10 +55,15 @@ Compose a section using only content copied verbatim from the spec — no infere
 
 Omit any subsection whose source in the spec is empty or marked `[GAP: ...]`.
 
-### Step 4 — Append to docs/SPEC.md
+### Step 4 — Append to docs/SPEC.md (idempotent)
 
 Read `docs/SPEC.md` if it exists.
 
+**Idempotency guard:** if a section heading `### <YYYY-MM-DD> — <slug>` already exists in
+`docs/SPEC.md`, do nothing and return the path — finalization may be re-run, and the log must
+not gain a duplicate entry.
+
+Otherwise:
 - **Does not exist:** write it with a header followed by the new section:
   ```
   # Feature Spec Log
