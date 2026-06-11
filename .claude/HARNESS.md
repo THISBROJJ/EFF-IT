@@ -80,6 +80,7 @@ and tools in a defined sequence. Live in `.claude/commands/` as flat `.md` files
 | Command | Trigger | What it does |
 |---|---|---|
 | `design` | `/design [idea]` | Design half: interrogate → spec → concern → architect → orchestrate. Writes the four root design docs and opens a design PR. Stops. |
+| `setup` | `/setup` | One-time bootstrap (after design merge, before first build): read root `ARCHITECTURE.md` + `PLAN.md` scopes, scaffold the directory tree with explainer `README.md` stubs. Idempotent. |
 | `fast-lane` | `/fast-lane [task id]` | Build half: read root `PLAN.md`, pick one task → implement → audit → security → atomic PR; flips the task to `DONE`. Re-invoke per task. |
 | `resume` | `/resume [run_id]` | Resume an interrupted design or build run from its checkpoint (`phase` selects the stage machine) |
 
@@ -128,6 +129,12 @@ optional supporting files (`references/`, `scripts/`, `tests/`).
   ├─ architect (Trigger A) →  ARCHITECTURE.md (repo root)   ← runs BEFORE the plan
   ├─ orchestrator agent   →  PLAN.md          (repo root; master tasklist, status per task)
   └─ git-expert agent     →  docs/design-<slug> branch → design PR  →  user merges
+
+/setup   (one-time bootstrap — run after the design PR merges, before the first build)
+  │
+  ├─ read root ARCHITECTURE.md (+ PLAN.md task scopes) → derive intended directory tree
+  ├─ confirm the layout with the user (mandatory gate)
+  └─ create missing dirs + explainer README.md stubs (idempotent; skips what exists)
 
 /fast-lane [task]   (build half — one task per invocation, repeat until PLAN.md is drained)
   │

@@ -50,7 +50,7 @@ Three surfaces, three roles. Each capability lives in exactly one.
 
 | Surface | Invoked by | Lives in | Use for |
 |---|---|---|---|
-| Command | User typing `/<name>` | `.claude/commands/` | Workflow orchestrators that manage other agents or pause for user input (e.g. `/design`, `/fast-lane`, `/resume`, `/evaluate-run`, `/idea-interrogator`, `/implementation-loop`) |
+| Command | User typing `/<name>` | `.claude/commands/` | Workflow orchestrators that manage other agents or pause for user input (e.g. `/design`, `/setup`, `/fast-lane`, `/resume`, `/evaluate-run`, `/idea-interrogator`, `/implementation-loop`) |
 | Skill | User typing `/<name>` **or** model auto-match against the description | `.claude/skills/<name>/` | Reusable bounded capabilities with a clear input/output (e.g. `spec-drafter`, `architect`, `git-*`, `unit-test-writer`, `pr-decomposition`) |
 | Agent | Spawned programmatically via the `Agent` tool by a command/skill | `.claude/agents/<name>/` | Pipeline workers that do one job and return a structured result |
 

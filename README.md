@@ -10,6 +10,7 @@ A Claude Code harness that wraps any software project with a full AI-assisted de
 Drop this scaffold into any repo and get:
 
 - **`/design`** — design half: interrogate idea → spec → concern → architect → orchestrate. Writes the durable repo-root design docs (`SPEC.md`, `CONCERN.md`, `ARCHITECTURE.md`, `PLAN.md`) and opens a design PR.
+- **`/setup`** — one-time bootstrap (after the design PR merges): read `ARCHITECTURE.md` and scaffold the directory tree it describes, with an explainer `README.md` in each created folder. Idempotent.
 - **`/fast-lane`** — build half: read the master `PLAN.md`, build one task → implement → audit → security review → atomic PR; flips that task to `DONE`. Re-invoke per task.
 - **`/resume`** — pick up an interrupted design or build run from its last checkpoint
 
@@ -70,4 +71,5 @@ The template ships neutral — no `.gitignore` entry for sessions, no default ex
 
 1. Copy `.claude/`, `sessions/`, `tests/`, `scripts/`, `.github/`, and `.gitignore` into your target repo
 2. Fill in `CLAUDE.md` (project name, stack, test command). The repo-root `ARCHITECTURE.md` is the project's (written by `/design`); the harness's own design is `.claude/HARNESS.md`.
-3. Run `/design` and describe what you want to build; merge the design PR, then `/fast-lane` to build each task
+3. Run `/design` and describe what you want to build; merge the design PR
+4. Run `/setup` once to scaffold the directories `ARCHITECTURE.md` describes, then `/fast-lane` to build each task
