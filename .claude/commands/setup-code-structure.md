@@ -1,6 +1,6 @@
 ---
-name: setup
-description: One-time project bootstrap — read the repo-root ARCHITECTURE.md (and PLAN.md task scopes) and scaffold the directory structure it describes, dropping a short explainer README.md in each created folder. Idempotent. Run once after the design PR merges, before /fast-lane.
+name: setup-code-structure
+description: One-time project bootstrap — read the repo-root ARCHITECTURE.md (and PLAN.md task scopes) and scaffold the code directory structure it describes, dropping a short explainer README.md in each created folder. Idempotent. Run once after the design PR merges, before /fast-lane.
 argument-hint: "(no arguments)"
 allowed-tools: [Agent, Bash, Read, Write, Glob, Grep]
 ---
@@ -29,7 +29,7 @@ Should be on `main` with a clean tree. If not, ask the user to commit/stash firs
 
 Confirm the repo-root `ARCHITECTURE.md` exists. If it is **absent**, stop:
 "No architecture found. Run `/design` first and merge its PR so `ARCHITECTURE.md` is on
-`main`, then run `/setup`."
+`main`, then run `/setup-code-structure`."
 
 ---
 
