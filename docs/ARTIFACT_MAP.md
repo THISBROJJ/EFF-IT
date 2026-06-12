@@ -97,9 +97,8 @@ flowchart TD
         %% ── Completion Audit ──────────────────────────────────────────────────
         SPEC --> KAREN["karen · completion auditor\n(Opus)"]:::agent
         KAREN -->|"PARTIAL / FAIL — punch list"| SPLAN
-        KAREN -->|"findings"| PROB[("PROBLEMS.md ↺\nkaren punch lists\nsecurity findings")]:::loop
+        KAREN -->|"findings (rows)"| PROB[("PROBLEMS.md\nin-run scratch · table rows")]:::artifact
         KAREN -->|"full audit report"| AUD[("audits/task-slug.md")]:::obs
-        PROB -.->|"retry context"| IMPL
 
         %% ── Evaluate Run ──────────────────────────────────────────────────────
         PROG --> EVAL_C["evaluate-run"]:::cmd
@@ -119,6 +118,12 @@ flowchart TD
         SECRV -->|"clean"| FLIP
         FLIP -->|"one write per task"| MPLAN
 
+        %% ── Promote unresolved problems to the durable backlog ────────────────
+        PROB -->|"unresolved residue at run end"| FLIP
+        FLIP -->|"promote OPEN rows (idempotent);\nflip resolved → RESOLVED"| BACKLOG[("BACKLOG.md · ROOT\ndurable problem queue\nstatus · promoted_to")]:::artifact
+        IMPL -->|"ESCALATED → task BLOCKED\n+ triage PR"| BACKLOG
+        BACKLOG -.->|"OPEN rows are buildable\nas their own session"| MPLAN
+
         %% ── Finalization (last task DONE, guarded by finalized) ───────────────
         FLIP -->|"last task DONE\n(guarded by finalized)"| ARCH_B["architect · Trigger B\nappend as-built"]:::agent
         ARCH_B --> RARCH
@@ -130,6 +135,9 @@ flowchart TD
         BPR --> PR[("GitHub PR → main\natomic, per task")]:::artifact
         BSESSION -->|"cleared at done"| CURR_RUN
     end
+
+    %% ── Cross-cycle: open problems feed the next design ───────────────────────
+    BACKLOG -.->|"orchestrator folds OPEN rows\ninto the next plan (carry-forward)"| ORCH
 
     %% ── Hooks (always active) ─────────────────────────────────────────────────
     LOG_H["log_tool_call.sh · hook\nPostToolUse — all tools"]:::hook
@@ -186,16 +194,21 @@ flowchart LR
         CHK2      -->|"phase + stage determine re-entry point"| RESUME2
     end
 
-    subgraph LOOP3 ["↺ Loop 3 — PROBLEMS.md (blocker escalation)"]
+    subgraph LOOP3 ["↺ Loop 3 — BACKLOG.md (cross-cycle problem queue)"]
         direction TB
-        KAREN3["karen"]:::agent
-        SECRV3["security-reviewer"]:::agent
-        PROB3[("PROBLEMS.md")]:::loop
-        IMPL3["implementation-loop"]:::cmd
+        WRITERS3["karen · security-reviewer\ncoder · test-runner"]:::agent
+        PROB3[("PROBLEMS.md\nin-run scratch")]:::loop
+        FASTLANE3["/build-task\npromote at run end"]:::cmd
+        BACKLOG3[("BACKLOG.md · ROOT\ndurable, committed")]:::loop
+        ORCH3["orchestrator\n(next design cycle)"]:::agent
+        MPLAN3[("PLAN.md · master")]:::loop
 
-        KAREN3 -->|"punch list findings"| PROB3
-        SECRV3 -->|"security findings"| PROB3
-        PROB3  -->|"retry context for failing tasks"| IMPL3
+        WRITERS3 -->|"append finding rows"| PROB3
+        PROB3    -->|"unresolved residue promoted"| FASTLANE3
+        FASTLANE3 -->|"OPEN rows (idempotent)"| BACKLOG3
+        BACKLOG3 -->|"folds OPEN rows in;\ncarries the rest forward"| ORCH3
+        ORCH3    -->|"new TODO tasks"| MPLAN3
+        MPLAN3   -.->|"/build-task builds them"| FASTLANE3
     end
 ```
 
@@ -210,10 +223,11 @@ flowchart LR
 | `SPEC.md` (root) | `SPEC.md` | `spec-drafter` | `concern-resolver`, `architect` (Trigger A), `orchestrator`, `implementation-loop`, `karen`, `security-reviewer`, `unit-test-writer` | No — durable/committed; write-once, read-many |
 | `CONCERN.md` (root) | `CONCERN.md` | `concern-resolver` (from root SPEC.md) | `architect` (Trigger A), `orchestrator` (folds Architect Checklist into security tasks), `security-reviewer` (Review Checklist) | No — durable/committed; but `feature_types` extracted here are written back to `checkpoint.json` |
 | `ARCHITECTURE.md` (root) | `ARCHITECTURE.md` | `architect` Trigger A (Architecture Draft, before orchestrator); `architect` Trigger B (appends as-built at finalization) | `orchestrator` (aligns task scopes); permanent design record for humans and future runs | No — single durable doc; Trigger A writes, Trigger B appends |
-| `PLAN.md` (master, root) | `PLAN.md` | `orchestrator` (initial master tasklist, every task `status: TODO`, empty `pr:`, `finalized: false`); `/build-task` (flips `status: DONE` + `pr:` per task; sets `finalized`) | `/build-task` (picks buildable task: status≠DONE AND all `depends_on` DONE; seeds session slice) | No — durable/committed; one status/pr flip per task, not a tight loop |
+| `PLAN.md` (master, root) | `PLAN.md` | `orchestrator` (initial master tasklist, every task `status: TODO`, empty `pr:`, `finalized: false`); `/build-task` (flips `status: DONE`/`BLOCKED` + `pr:` per task; may append a `TODO` task promoted from `BACKLOG.md`; sets `finalized`) | `/build-task` (picks buildable task: status≠DONE AND all `depends_on` DONE; seeds session slice) | No — durable/committed; one status/pr flip per task, not a tight loop |
 | `PLAN.md` (session) | `sessions/<run_id>/PLAN.md` | `/build-task` (seeds working slice from picked master task); `karen` (punch list on PARTIAL/FAIL); `security-reviewer` (remediation tasks on FINDINGS) | `implementation-loop` (re-reads each iteration) | **↺ Yes** — per-task working slice; `karen` and `security-reviewer` append; `implementation-loop` re-reads |
 | `docs/SPEC.md` | `docs/SPEC.md` | `spec-keeper` (at finalization, append-only, idempotent) | Human / future pipeline runs (cross-cycle feature log) | No — append-only; idempotent re-appends |
-| `PROBLEMS.md` | `sessions/<run_id>/PROBLEMS.md` | `karen` (PARTIAL/FAIL); `security-reviewer` (FINDINGS) | `implementation-loop` (retry context) | **↺ Yes** — session-scoped, multi-writer, append-only; `implementation-loop` re-reads on next cycle |
+| `PROBLEMS.md` | `sessions/<run_id>/PROBLEMS.md` | `karen`, `security-reviewer`, `coder` (BLOCKED), `test-runner` (FAIL/BLOCKED) — one table row per finding | `/build-task` (promotion source at run end) | No — ephemeral in-run scratch; promoted to `BACKLOG.md`, never a cross-cycle source (run-scoped path) |
+| `BACKLOG.md` (root) | `BACKLOG.md` | `/build-task` (lazy-creates; promotes `OPEN` rows at run end, idempotent; flips `RESOLVED`); `orchestrator` (folds `OPEN`→`PROMOTED`, carry-forward); `coder` (`OPEN` row when no active run) | `/build-task` (Step 1 lists `OPEN` rows as buildable); `orchestrator` (each design cycle) | **↺ Yes** — durable cross-cycle queue; promoted into, folded into plans, carried forward |
 | `PROGRESS_TRACKER.md` | `sessions/<run_id>/PROGRESS_TRACKER.md` | `session-keeper` (sole writer, append-only) | `evaluate-run` (extracts agent traces), `session-autocommit.sh` (triggers auto-commit on every write) | No — but auto-commit hook fires on every write |
 | `session_log.json` | `sessions/<run_id>/session_log.json` | `log_tool_call.sh` hook (PostToolUse, when `.current_run` active) | Human / external tooling only | No |
 | `tool-calls-YYYY-MM-DD.jsonl` | `sessions/tool-calls-YYYY-MM-DD.jsonl` | `log_tool_call.sh` hook (PostToolUse, when no active run) | Human / external tooling only | No — daily rotation |

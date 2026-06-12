@@ -53,7 +53,7 @@ For each parallel group (process all parallel groups before sequential):
 
 After all agents in the group complete:
 
-**Karen** — For each **coder** task, spawn Karen simultaneously (one Agent call per coder task). Pass the task description as the original ask and the task's `scope` as the change set. Wait for all Karen verdicts. PASS → continue; PARTIAL or FAIL → append findings to `sessions/<run_id>/PROBLEMS.md`, mark task `NEEDS_RETRY`.
+**Karen** — For each **coder** task, spawn Karen simultaneously (one Agent call per coder task). Pass the task description as the original ask and the task's `scope` as the change set. Wait for all Karen verdicts. PASS → continue; PARTIAL or FAIL → append a row to the ephemeral `sessions/<run_id>/PROBLEMS.md` scratch log (`source: karen`; one row per finding, schema in `.claude/HARNESS.md`), mark task `NEEDS_RETRY`.
 
 **REQUIRED — record before proceeding to next group:** For **every** agent in this group (coder and non-coder alike), spawn `session-keeper` in parallel (one call per agent) with: `run_id`, `agent_name`, `task_id`, `iteration`, `status` (`DONE` or `BLOCKED`), `summary`, `karen_verdict` (Karen's verdict for coder tasks; `"n/a"` for all other agent types), `karen_findings`, `scope`. Wait for **all** session-keeper calls to complete. Do not start the next group until this step finishes.
 
@@ -65,7 +65,7 @@ Coders must not modify test files — the tests written in step 1.5 are the acce
 
 For each sequential group, in order:
 - Spawn one agent at a time. Pass the result of the prior task as `context` to the next.
-- **Karen** (coder tasks only): after the agent completes, spawn Karen with the task description and scope. Wait for verdict. PASS → continue; PARTIAL or FAIL → append findings to `sessions/<run_id>/PROBLEMS.md`, mark task `NEEDS_RETRY`.
+- **Karen** (coder tasks only): after the agent completes, spawn Karen with the task description and scope. Wait for verdict. PASS → continue; PARTIAL or FAIL → append a row to the ephemeral `sessions/<run_id>/PROBLEMS.md` scratch log (`source: karen`; one row per finding, schema in `.claude/HARNESS.md`), mark task `NEEDS_RETRY`.
 - **REQUIRED — record before proceeding to next task:** Spawn `session-keeper` with: `run_id`, `agent_name`, `task_id`, `iteration`, `status` (`DONE` or `BLOCKED`), `summary`, `karen_verdict` (Karen's verdict for coder tasks; `"n/a"` for all other agent types), `karen_findings`, `scope`. Wait for session-keeper to complete. Do not start the next task until this step finishes.
 
 **4. Run tests**
@@ -92,7 +92,7 @@ Spawn the `security-reviewer` agent with `run_id` and `skill_findings: SKILL_SEC
 | Security verdict | Action |
 |---|---|
 | PASS | Exit loop with STATUS: PASS |
-| FINDINGS | Append remediation tasks to `sessions/<run_id>/PLAN.md`; agent writes findings to `sessions/<run_id>/PROBLEMS.md`; go to Iteration N+1 (or escalate if max_iterations reached — include security findings in escalation report) |
+| FINDINGS | Append remediation tasks to `sessions/<run_id>/PLAN.md` (the actionable queue); the agent writes findings as rows to the ephemeral `sessions/<run_id>/PROBLEMS.md` scratch log; go to Iteration N+1 (or escalate if max_iterations reached — include security findings in escalation report) |
 
 **5. Max iterations check**
 
@@ -116,6 +116,10 @@ Return to the caller with:
 ---
 
 ## Escalation format (max iterations reached without PASS)
+
+This report is the loop's return value to `/build-task`, which records the residue durably
+(promotes it to the root `BACKLOG.md` and marks the task `BLOCKED`). The loop itself writes
+nothing durable — `sessions/<run_id>/PROBLEMS.md` is ephemeral scratch that dies with the run.
 
 ```
 # Implementation Loop — Escalation

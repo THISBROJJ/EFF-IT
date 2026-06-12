@@ -23,12 +23,17 @@
     {
       "id": "orch-05",
       "description": "Every task carries status:TODO and an empty pr: field; plan has finalized:false",
-      "check": "Every task entry in the written plan contains 'status: TODO' and a 'pr:' key (empty on first write). The top-level plan contains 'finalized: false'. A task missing either field, a task whose status is not TODO on first write, or a plan missing the finalized flag is a FAIL of this criterion."
+      "check": "Every task entry in the written plan contains 'status: TODO' and a 'pr:' key (empty on first write). The top-level plan contains 'finalized: false'. A task missing either field, a task whose status is not TODO on first write, or a plan missing the finalized flag is a FAIL of this criterion. This check applies only to task entries in PLAN.md — the 'status' column of BACKLOG.md rows is out of scope here (see orch-07)."
     },
     {
       "id": "orch-06",
       "description": "Security checklist items from CONCERN.md are folded into the plan as tasks",
       "check": "If the repo-root CONCERN.md has a non-empty '## Architect Checklist', the trace shows CONCERN.md was read and each checklist item appears as a security task (T-S#) interleaved before the relevant feature task — not appended in a trailing section and not omitted. If the checklist is empty or CONCERN.md is absent, this criterion passes trivially."
+    },
+    {
+      "id": "orch-07",
+      "description": "Backlog carry-forward — open problems are preserved and folded across cycles",
+      "check": "If a root BACKLOG.md existed when the orchestrator ran, the trace shows it was read and every row whose status is not RESOLVED or WONT_FIX is preserved with its original BL-NNN id (none dropped or renumbered). Any OPEN row whose problem this spec covers is folded into the plan as a TODO task, with that row set to PROMOTED and promoted_to referencing the new task id. If BACKLOG.md was absent, this criterion is SKIP."
     }
   ]
 }

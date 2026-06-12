@@ -53,20 +53,25 @@ Changed:  <file:line-range for each change>
 Notes:    <anything test-runner or the next task needs to know>
 ```
 
-If `Status: BLOCKED`, resolve the problems log path via `.current_run`:
+If `Status: BLOCKED`, resolve the active run via `.current_run`:
 
 ```bash
 run_id=$(cat .current_run 2>/dev/null)
 ```
 
-If `run_id` is non-empty, append to `sessions/<run_id>/PROBLEMS.md`; otherwise append to `docs/problems.md`. Create the file if absent.
+If `run_id` is non-empty, append one row to the ephemeral `sessions/<run_id>/PROBLEMS.md`
+scratch log (create with its header if absent) — `/build-task` promotes still-unresolved rows
+to the durable root `BACKLOG.md` at run end:
 
 ```
-## [coder] [<task-id>] [<YYYY-MM-DD>]
-**Problem:** <what is blocking completion>
-**Impact:** <what cannot proceed without this>
-**Suggested fix:** <scope expansion or dependency needed>
+| ts | source | severity | area | problem | suggested_fix |
+|----|--------|----------|------|---------|---------------|
+| <ISO8601> | coder | HIGH\|MEDIUM\|LOW | <file:line> | <what is blocking completion> | <scope expansion or dependency needed> |
 ```
+
+If `run_id` is empty (no active build session, so nothing to promote from), append an `OPEN`
+row directly to the durable root `BACKLOG.md` (create it with its header if absent; schema in
+`.claude/HARNESS.md`). Never write `docs/problems.md`.
 
 ## Hard rules
 

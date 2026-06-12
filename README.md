@@ -14,7 +14,7 @@ Drop this scaffold into any repo and get:
 - **`/build-task`** — build half: read the master `PLAN.md`, build one task → implement → audit → security review → atomic PR; flips that task to `DONE`. Re-invoke per task.
 - **`/resume-run`** — pick up an interrupted design or build run from its last checkpoint
 
-The project's durable design docs live at the repo root; the master `PLAN.md` is the single source of truth for what's built. Ephemeral per-run telemetry (`checkpoint.json`, progress tracker, problems log, evaluation, traces) is self-contained under `sessions/{run_id}/`. The harness's own design is documented in [`.claude/HARNESS.md`](./.claude/HARNESS.md).
+The project's durable design docs live at the repo root; the master `PLAN.md` is the single source of truth for what's built, and `BACKLOG.md` is the durable queue of unresolved problems (created on the first build promotion, carried across cycles). Ephemeral per-run telemetry (`checkpoint.json`, progress tracker, problems scratch, evaluation, traces) is self-contained under `sessions/{run_id}/`. The harness's own design is documented in [`.claude/HARNESS.md`](./.claude/HARNESS.md).
 
 ---
 

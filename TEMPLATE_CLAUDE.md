@@ -81,11 +81,14 @@ Use `/git-branch`, `/git-commit`, `/git-pr` for these tasks.
 ## 8. Session artifacts
 
 Durable **project** design docs are committed at the repo root: `SPEC.md`, `CONCERN.md`,
-`ARCHITECTURE.md`, `PLAN.md` (the master tasklist). The cross-cycle feature log is `docs/SPEC.md`.
+`ARCHITECTURE.md`, `PLAN.md` (the master tasklist), and `BACKLOG.md` (the durable problem
+backlog — created lazily on the first `/build-task` promotion, carried across cycles). The
+cross-cycle feature log is `docs/SPEC.md`.
 
 **Ephemeral** per-run telemetry (`checkpoint.json`, per-task working `PLAN.md`,
-`PROGRESS_TRACKER.md`, `PROBLEMS.md`, `EVALUATION.md`, `traces/`) is written to
-`sessions/<run_id>/` — local-only, excluded via `.git/info/exclude`, never committed.
+`PROGRESS_TRACKER.md`, `PROBLEMS.md` (in-run findings scratch, promoted to `BACKLOG.md`),
+`EVALUATION.md`, `traces/`) is written to `sessions/<run_id>/` — local-only, excluded via
+`.git/info/exclude`, never committed.
 
 `checkpoint.json` tracks the current stage and `phase` (`design` or `build`). Use `/resume-run <run_id>` to continue an interrupted run.
 

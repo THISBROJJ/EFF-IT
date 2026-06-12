@@ -2,7 +2,8 @@
 
 Each pipeline run (`/draft-design-docs`, `/build-task`, `/resume-run`) creates a self-contained directory here
 for **ephemeral telemetry**. The durable design docs (`SPEC.md`, `CONCERN.md`,
-`ARCHITECTURE.md`, `PLAN.md`) live at the repo root, not here.
+`ARCHITECTURE.md`, `PLAN.md`) and the durable problem backlog (`BACKLOG.md`) live at the repo
+root, not here.
 
 ```
 sessions/
@@ -11,7 +12,7 @@ sessions/
     session_log.jsonl          ← every tool call during this run (JSONL)
     PLAN.md                    ← per-task working slice (build phase; loop may mutate freely)
     PROGRESS_TRACKER.md        ← per-agent I/O log
-    PROBLEMS.md                ← karen and security-reviewer findings
+    PROBLEMS.md                ← in-run findings scratch (table rows; promoted to root BACKLOG.md at run end)
     EVALUATION.md              ← evaluate-run scores
     traces/                    ← extracted agent traces + verdicts
   tool-calls-YYYY-MM-DD.jsonl  ← fallback log when no run is active

@@ -26,7 +26,15 @@ name). Read the spec fully. Also read the repo-root design docs:
   exists.
 
 Also read, if it exists:
-- `sessions/<run_id>/PROBLEMS.md` — problems logged by prior agents; fold any `BLOCKED` or `CRITICAL` entries relevant to this spec into the plan as explicit tasks or open questions before finalizing
+- root `BACKLOG.md` — the durable problem backlog carried across design cycles. Two duties:
+  1. **Carry forward.** Never drop or renumber its rows; every row whose `status` is not
+     `RESOLVED`/`WONT_FIX` stays, with its `BL-NNN` id unchanged. (You append status changes
+     only — see duty 2 — you do not rewrite the file wholesale.)
+  2. **Fold in.** For each `OPEN` row this spec covers, add a corresponding `TODO` task to the
+     plan, then set that row's `status: PROMOTED` and `promoted_to: <task id>` in `BACKLOG.md`.
+
+  This replaces the former read of the run-scoped `sessions/<run_id>/PROBLEMS.md` — a fresh
+  design `run_id` could never resolve that path, so the cross-cycle feedback never connected.
 
 ## Output
 
@@ -52,7 +60,7 @@ parallel_groups:
         agent: coder
         scope: <file or directory>
         depends_on: []
-        status: TODO   # TODO | DONE — flipped to DONE by /build-task when the PR lands
+        status: TODO   # TODO | DONE | BLOCKED — /build-task owns transitions (DONE when PR lands; BLOCKED on escalation)
         pr:            # PR URL, filled in by /build-task on completion
       - id: P1-T2
         description: <specific implementation task>
@@ -81,7 +89,9 @@ acceptance_criteria:
 ```
 
 Every task carries `status: TODO` and an empty `pr:` field on first write. The orchestrator
-never sets these to anything but `TODO`/empty — `/build-task` owns their lifecycle.
+never sets these to anything but `TODO`/empty in `PLAN.md` — `/build-task` owns their
+lifecycle. (The `status` column in `BACKLOG.md` is separate: the orchestrator may set folded
+rows to `PROMOTED` there, per the carry-forward/fold-in duty above.)
 
 <!-- AC format (ID rules, stability, zero-padding) is defined in `.claude/HARNESS.md` — see Cross-agent contracts. -->
 

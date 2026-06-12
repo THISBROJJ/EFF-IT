@@ -54,7 +54,7 @@ optional `model`. Live in `.claude/agents/` — Claude Code discovers them autom
 
 | Agent | Role |
 |---|---|
-| `orchestrator` | Reads root `SPEC.md`/`CONCERN.md`/`ARCHITECTURE.md`; writes the master task plan (root `PLAN.md`); folds security checklist into tasks |
+| `orchestrator` | Reads root `SPEC.md`/`CONCERN.md`/`ARCHITECTURE.md`; writes the master task plan (root `PLAN.md`); folds security checklist into tasks; reads root `BACKLOG.md` and folds open problems into the plan (carry-forward) |
 | `concern-resolver` | Scans root `SPEC.md` for security trigger keywords; writes root `CONCERN.md` |
 | `coder` | Implements a single task from the plan |
 | `karen` | Audits completed work against the original spec (PASS / PARTIAL / FAIL) |
@@ -166,6 +166,7 @@ under `sessions/`. The split is deliberate: design is durable, build telemetry i
   CONCERN.md         ← triggered security concerns (concern-resolver)
   ARCHITECTURE.md    ← project architecture        (architect; as-built appended at finalize)
   PLAN.md            ← master tasklist, status+pr per task, finalized flag (orchestrator + build-task)
+  BACKLOG.md         ← durable problem backlog, table rows (build-task promotes; orchestrator carries forward; created lazily on first promotion)
 docs/
   SPEC.md            ← permanent cross-cycle feature log (spec-keeper, append-only)
 sessions/
@@ -173,7 +174,7 @@ sessions/
     checkpoint.json     ← current stage + metadata
     PLAN.md             ← per-task working slice (build phase only; loop may mutate freely)
     PROGRESS_TRACKER.md ← per-agent I/O log (auto-committed by hook)
-    PROBLEMS.md         ← karen and security findings
+    PROBLEMS.md         ← in-run findings scratch (table rows); promoted to root BACKLOG.md at run end
     EVALUATION.md       ← evaluate-run scores
     traces/             ← extracted agent traces + verdicts
     session_log.json    ← structured tool-call log for this run
@@ -209,17 +210,32 @@ sessions/
   spec-drafter mints them in `SPEC.md`; orchestrator references them in `PLAN.md`
   (`acceptance_criteria[].id` / `covered_by`); karen reuses the same IDs when a spec is
   passed. IDs are stable — never renumber an existing AC; append new ones.
-- **Plan task status.** Every `PLAN.md` task carries `status: TODO|DONE` and a `pr:` URL
-  field. The orchestrator writes them `TODO`/empty; `/build-task` owns their lifecycle and is
-  the only writer that flips them.
+- **Plan task status.** Every `PLAN.md` task carries `status: TODO|DONE|BLOCKED` and a `pr:`
+  URL field. The orchestrator writes them `TODO`/empty; `/build-task` owns their lifecycle — it
+  flips `status` (`DONE` when the PR lands, `BLOCKED` on escalation) and `pr:`, and may
+  additionally *append* a new `TODO` task promoted from a `BACKLOG.md` row (recording
+  `promoted_to`). No other writer mutates `PLAN.md`.
+- **Problem backlog.** Unresolved problems live in the durable root `BACKLOG.md` as table rows:
+  `id | discovered | source | severity | area | problem | suggested_fix | status | promoted_to`.
+  `id` is `BL-NNN` (monotonic, never renumbered, like `AC-NN`); `severity` is `HIGH|MEDIUM|LOW`;
+  `status` is `OPEN|PROMOTED|RESOLVED|WONT_FIX`. `/build-task` creates the file on first
+  promotion (lazy) and appends `OPEN` rows at run end, deduped on `source+area+problem`; the
+  orchestrator reads it each design cycle, folds `OPEN` rows the new spec covers into `TODO`
+  tasks (→ `PROMOTED`), and carries the rest forward (ids preserved). The ephemeral
+  `sessions/<run_id>/PROBLEMS.md` is the in-run scratch this promotes from — never a
+  cross-cycle source (its run-scoped path can't be resolved from a later run). `BACKLOG.md`
+  records problems in the *project being built*; defects in the *harness scaffold* go to
+  `HARNESS_FINDINGS.md`.
 
 ## Design/build invariant
 
 One `/draft-design-docs` cycle fills the four root docs; `/build-task` then drains `PLAN.md` task by task.
 A later `/draft-design-docs` **overwrites** the root docs — the clean-tree preflight does not protect a
 committed `PLAN.md`. Therefore: **finish or shelve the current design before starting a new
-one.** `docs/SPEC.md` is the only memory that survives across cycles, which is why
-`spec-keeper` logs there at finalization.
+one.** `docs/SPEC.md` (the shipped-spec log) and `BACKLOG.md` (the open-problem queue) are the
+memory that survives across cycles — `spec-keeper` logs to the former at finalization, and
+`/build-task` promotes unresolved problems to the latter, which the orchestrator carries
+forward into the next plan.
 
 ---
 
@@ -260,6 +276,22 @@ Both paths are complementary: the per-run log captures structured events for a s
 ---
 
 ## Change log
+
+### 2026-06-11 — durable problem backlog
+
+**What changed.** Closed the problem-feedback loop with a new durable root `BACKLOG.md`.
+
+1. **Fixed the dead cross-cycle path.** The orchestrator previously read
+   `sessions/<run_id>/PROBLEMS.md` to fold problems into the next plan, but it runs in
+   `/draft-design-docs` with a fresh `run_id` and could never resolve that path. It now reads
+   root `BACKLOG.md`, folds `OPEN` rows into the new plan, and carries the rest forward.
+2. **Stopped problems evaporating.** `/build-task` promotes unresolved residue (escalation,
+   `BLOCKED`, deferred findings) from the ephemeral `PROBLEMS.md` into `BACKLOG.md` at run end
+   (riding the status-flip commit; on escalation it sets the task `BLOCKED` and opens a triage
+   PR). `OPEN` rows are buildable — `/build-task` can fix one as its own session.
+3. **One job per file + cheaper format.** `PROBLEMS.md` is now in-run scratch only, and both it
+   and `BACKLOG.md` use compact table rows instead of prose blocks. Task status enum gained
+   `BLOCKED`. The stray `coder` → `docs/problems.md` fallback was repointed to `BACKLOG.md`.
 
 ### 2026-06-10 — decouple-design-build
 

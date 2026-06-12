@@ -43,7 +43,7 @@ flowchart TD
         CONCERN_MD --> ARCH_A["architect agent — Trigger A\n(reads SPEC.md + CONCERN.md,\nNO plan — runs BEFORE orchestrator)"]:::agent
         ARCH_A --> ARCH_MD[("ARCHITECTURE.md (repo root)\nstage: orchestrate")]:::artifact
 
-        ARCH_MD --> ORCH["orchestrator agent\n(reads SPEC + CONCERN + ARCHITECTURE;\nfolds Architect Checklist → security tasks)"]:::agent
+        ARCH_MD --> ORCH["orchestrator agent\n(reads SPEC + CONCERN + ARCHITECTURE + BACKLOG;\nfolds Architect Checklist → security tasks;\nfolds OPEN backlog rows, carries rest forward)"]:::agent
         ORCH --> PLAN_MASTER[("PLAN.md (repo root) — master\nevery task status: TODO, pr: empty\nfinalized: false · stage: publish")]:::artifact
 
         PLAN_MASTER --> D_GIT["git-expert agent\nbranch docs/design-{slug}\ncommit 4 root docs · open design PR"]:::agent
@@ -63,7 +63,7 @@ flowchart TD
         B_PRE -- "Yes" --> B_READ["read root PLAN.md"]:::stage
         B_READ --> B_PLANQ{"PLAN.md present?"}:::decision
         B_PLANQ -- "No" --> B_NOPLAN["Tell user to run /draft-design-docs"]:::stage
-        B_PLANQ -- "Yes" --> B_SELECT["select BUILDABLE task\nstatus != DONE AND deps DONE\nask user · warn on blocked"]:::stage
+        B_PLANQ -- "Yes" --> B_SELECT["select BUILDABLE task\nstatus != DONE AND deps DONE\n+ OPEN BACKLOG rows\nask user · warn on blocked"]:::stage
 
         B_SELECT --> B_SETUP["Session Setup\nphase: build\nstage: task-select · task_id\ndetect test command"]:::stage
         B_SETUP --> B_CHK[("sessions/{run_id}/checkpoint.json")]:::artifact
@@ -103,6 +103,9 @@ flowchart TD
         PROB_S --> IMPL_ENTRY
         SECV -- "PASS" --> FLIP["flip task status: DONE + pr:\nin master root PLAN.md\nstage: git"]:::stage
 
+        FLIP -- "promote unresolved residue (OPEN);\nflip resolved → RESOLVED" --> BACKLOG[("BACKLOG.md (repo root)\ndurable problem backlog\ncreated lazily, carried across cycles")]:::artifact
+        IMPL_ENTRY -. "ESCALATED (max iters):\ntask BLOCKED + triage PR" .-> BACKLOG
+
         FLIP --> FINAL_Q{"last task DONE\n& not finalized?"}:::decision
         FINAL_Q -- "Yes" --> FINAL["architect Trigger B → ARCHITECTURE.md (as-built)\nspec-keeper → docs/SPEC.md (cross-cycle log)\nset finalized: true"]:::agent
         FINAL --> B_GIT_WRAP
@@ -114,6 +117,9 @@ flowchart TD
     end
 
     FAST --> B_PRE
+
+    %% ── Cross-cycle: open problems feed the next design ─────────────────────────
+    BACKLOG -. "orchestrator folds OPEN rows\ninto the next plan (carry-forward)" .-> ORCH
 
     %% ── Resume Entry (dots into BOTH stage machines) ───────────────────────────
     RESUME --> R_CHK[("sessions/{run_id}/checkpoint.json")]:::artifact
@@ -178,7 +184,8 @@ Repo root (durable, committed — the design docs)
 ├── SPEC.md                        ← feature specification (source of truth)
 ├── CONCERN.md                     ← triggered concerns + app-type checklists
 ├── ARCHITECTURE.md                ← architecture (Trigger A draft → Trigger B as-built)
-└── PLAN.md                        ← master tasklist (status / pr: / finalized: per task)
+├── PLAN.md                        ← master tasklist (status / pr: / finalized: per task)
+└── BACKLOG.md                     ← durable problem backlog (created lazily on first promotion)
 
 docs/
 └── SPEC.md                        ← cross-cycle spec log (spec-keeper, append-only)
@@ -188,7 +195,7 @@ sessions/
     ├── checkpoint.json            ← phase (design|build) + stage + metadata
     ├── PLAN.md                    ← per-task working slice (build loop mutates THIS)
     ├── PROGRESS_TRACKER.md        ← per-agent I/O log (auto-committed on write)
-    ├── PROBLEMS.md                ← karen punch lists + security findings
+    ├── PROBLEMS.md                ← in-run findings scratch (table rows; promoted to BACKLOG.md)
     ├── EVALUATION.md              ← agent-evaluator scores per trace
     ├── traces/                    ← raw agent trace records
     └── session_log.json           ← structured session event log

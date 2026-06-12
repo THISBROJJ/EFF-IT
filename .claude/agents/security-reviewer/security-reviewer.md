@@ -81,23 +81,24 @@ Check changed files (`git diff --name-only HEAD`) for:
 - TASK: <specific fix> in <file>
 ```
 
-### Step 3.5 — Write PROBLEMS.md
+### Step 3.5 — Record findings (PROBLEMS.md scratch)
 
-If verdict is FINDINGS, append to `sessions/{run_id}/PROBLEMS.md` (create if absent):
+If verdict is FINDINGS, append **one row per finding** to `sessions/{run_id}/PROBLEMS.md` —
+the ephemeral in-run scratch log. Create the file with its header if absent:
 
-```markdown
-## [security-reviewer] — <ISO8601 timestamp>
-**Verdict:** FINDINGS
-
-### OWASP findings
-| Category | File:line | Severity | Remediation |
-|---|---|---|---|
-(repeat HIGH/MEDIUM findings from Step 3)
-
-### Remediation tasks
-- TASK: <fix> in <file>
-(repeat from Step 3)
 ```
+| ts | source | severity | area | problem | suggested_fix |
+|----|--------|----------|------|---------|---------------|
+```
+
+Append (one row per HIGH/MEDIUM finding from Step 3):
+
+```
+| <ISO8601> | security-reviewer | HIGH\|MEDIUM\|LOW | <file:line> | <one-clause problem> | <one-clause fix> |
+```
+
+These rows are scratch — `/build-task` promotes any still-unresolved finding to the durable
+root `BACKLOG.md` at run end. Do not write `BACKLOG.md` yourself.
 
 ## Hard rules
 

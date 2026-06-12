@@ -40,9 +40,21 @@ id in `depends_on` belongs to a task whose `status` is `DONE`.
   `DONE`, stop and list the blocking task ids — do not build against missing code.
 - If `$ARGUMENTS` is empty: list the buildable tasks (id, description, scope) and ask the
   user which to start. Also list any pending-but-blocked tasks so the user sees why they
-  are unavailable.
+  are unavailable. (A task with `status: BLOCKED` is buildable again — `status` is not `DONE`.)
 
-If every task is already `DONE`, report that the design is complete (see Step 7) and stop.
+**Open problems are also buildable.** Read the root `BACKLOG.md` if it exists (absent → skip).
+Include its `OPEN` rows as candidates alongside the plan's tasks, listed by `id` (e.g.
+`BL-003`), when resolving `$ARGUMENTS` or prompting the user.
+
+- Selecting a plan task → proceed as below.
+- Selecting an `OPEN` backlog row → append a new task to the master `PLAN.md` (group `PL`,
+  `agent: coder`, `status: TODO`, `depends_on: []`, with `description`/`scope` seeded from the
+  row's `problem`/`area`/`suggested_fix`); set that row's `status: PROMOTED` and
+  `promoted_to: <new task id>`; then build that task. (This is the one case where `/build-task`
+  *adds* a task rather than only flipping status — see the contract in `.claude/HARNESS.md`.)
+
+If every task is `DONE` and no `OPEN` backlog rows remain, report that the design is complete
+(see Step 7) and stop.
 
 Let `TASK` be the chosen task and `task-slug` a kebab-case slug from its description.
 
@@ -108,7 +120,19 @@ Update checkpoint: `"stage": "implement", "branch": "feat/<task-slug>"`.
 Invoke the `implementation-loop` command:
 - Input: `PLAN_PATH` = `sessions/<run_id>/PLAN.md` (the working slice), `SPEC_PATH` = `SPEC.md`, `run_id`, `max_iterations=5`
 
-Update checkpoint: `"stage": "audit"`.
+**If the loop returns `ESCALATED`** (max iterations reached without PASS), do not proceed to
+the audit — record the failure durably instead:
+1. Promote the unresolved residue (rows in `sessions/<run_id>/PROBLEMS.md` plus the escalation
+   report's still-failing tests and BLOCKED tasks) into the root `BACKLOG.md` as `OPEN` rows,
+   following the Step 6 promotion rules (create-if-absent, idempotent, `source: escalation`).
+2. In the master root `PLAN.md`, set `TASK`'s `status: BLOCKED` (leave `pr:` empty).
+3. Spawn the `git-expert` agent to commit the `BACKLOG.md` rows + the `BLOCKED` status flip
+   and open a small **triage PR** against `main` (title `chore: triage <task-slug>`), so the
+   record reaches `main` even if the build is abandoned.
+4. Update checkpoint `"stage": "done"`, `rm -f .current_run`, and tell the user: merge the
+   triage PR to keep the record, or close it to discard. **Stop.**
+
+Otherwise (loop returned PASS), update checkpoint: `"stage": "audit"` and continue.
 
 ---
 
@@ -146,7 +170,7 @@ Spawn the `security-reviewer` agent, passing `SKILL_SECURITY_OUTPUT` as `skill_f
 | Result | Action |
 |---|---|
 | PASS | Continue to Step 6 |
-| FINDINGS | Append remediation tasks to `sessions/<run_id>/PLAN.md`; agent writes findings to `sessions/<run_id>/PROBLEMS.md`; return to Step 3 |
+| FINDINGS | Append remediation tasks to `sessions/<run_id>/PLAN.md` (the actionable queue); the agent writes findings as rows to the ephemeral `sessions/<run_id>/PROBLEMS.md` scratch log; return to Step 3 |
 
 Update checkpoint: `"stage": "git"`.
 
@@ -156,6 +180,16 @@ Update checkpoint: `"stage": "git"`.
 
 1. **Flip task status in the master plan.** In the repo-root `PLAN.md`, set `TASK`'s
    `status: DONE`. Leave `pr:` empty for now (filled after the PR is opened).
+
+1.5. **Promote unresolved problems to the backlog (idempotent).** Scan
+   `sessions/<run_id>/PROBLEMS.md`. For each finding **not** resolved during the loop (coder
+   `BLOCKED` items, security findings still open, karen items noted out-of-scope), append an
+   `OPEN` row to the root `BACKLOG.md` (create the file with its header if absent; schema in
+   `.claude/HARNESS.md`), assigning each the next `BL-NNN` id and `discovered: <run_id> / <task_id>`.
+   **Dedup on `source+area+problem`** — never append a row that already exists, so re-runs and
+   `/resume-run` re-entry are no-ops. Then flip any backlog row this task *resolved* to
+   `status: RESOLVED`, `promoted_to: <PR url>` — including the row this task was promoted from
+   (Step 1), if any. These `BACKLOG.md` edits ride the sub-step 3 commit (no separate commit).
 
 2. **Finalize if this was the last task (idempotent).** If every task in the root `PLAN.md`
    is now `DONE` **and** the plan's top-level `finalized` is not already `true`:
@@ -167,8 +201,9 @@ Update checkpoint: `"stage": "git"`.
    If not the last task, or already finalized, skip this sub-step.
 
 3. **Open the PR.** Spawn the `git-expert` agent:
-   - Commit the task's code plus the root `PLAN.md` status change (and, on finalization, the
-     updated `ARCHITECTURE.md` and `docs/SPEC.md`) — conventional commit, no AI trailers
+   - Commit the task's code plus the root `PLAN.md` status change, any `BACKLOG.md`
+     promotion/resolution rows from sub-step 1.5 (and, on finalization, the updated
+     `ARCHITECTURE.md` and `docs/SPEC.md`) — conventional commit, no AI trailers
    - Push the branch and open a PR against `main`
    - Record the PR URL back into `TASK`'s `pr:` field in the root `PLAN.md` and amend/commit
      that change
@@ -196,6 +231,7 @@ shipped spec is logged in `docs/SPEC.md`.
 |---|---|---|
 | Spec / concern / architecture | `SPEC.md` · `CONCERN.md` · `ARCHITECTURE.md` (repo root) | durable (from `/draft-design-docs`) |
 | Master task plan | `PLAN.md` (repo root) | durable; status flipped per task |
+| Problem backlog | `BACKLOG.md` (repo root) | durable; created on first promotion, carried across cycles |
 | Per-task working plan | `sessions/<run_id>/PLAN.md` | ephemeral |
 | Progress tracker / problems / evaluation | `sessions/<run_id>/{PROGRESS_TRACKER,PROBLEMS,EVALUATION}.md` | ephemeral |
 | Checkpoint | `sessions/<run_id>/checkpoint.json` | ephemeral |

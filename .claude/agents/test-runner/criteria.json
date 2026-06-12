@@ -18,7 +18,7 @@
     {
       "id": "test-runner-04",
       "description": "PROBLEMS.md is written to sessions/<run_id>/, not docs/",
-      "check": "When Status is FAIL or BLOCKED, the agent appends the problem entry to `sessions/<run_id>/PROBLEMS.md` (creating it if absent). Writing to `docs/problems.md`, any other path, or omitting the append entirely is a FAIL of this criterion."
+      "check": "When Status is FAIL or BLOCKED, the agent appends a table row (ts | source=test-runner | severity | area | problem | suggested_fix) to `sessions/<run_id>/PROBLEMS.md`, creating the file with its header if absent. Writing to `docs/problems.md`, any other path, or omitting the append entirely is a FAIL of this criterion."
     }
   ]
 }

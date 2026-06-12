@@ -109,10 +109,12 @@ A `design`-phase run stays on `main` until its `publish` stage.
 | `implement` | Invoke implementation-loop with current `iteration` as starting point |
 | `audit` | Spawn karen with `SPEC.md`; on PASS invoke `/evaluate-run <run_id>` and append its summary to PROGRESS_TRACKER.md, continue to security |
 | `security` | Spawn security-reviewer |
-| `git` | Flip the task's `status`/`pr` in root `PLAN.md`, finalize if it was the last task (architect Trigger B + spec-keeper, guarded by `finalized`), then git-expert commit/push/PR |
+| `git` | Flip the task's `status`/`pr` in root `PLAN.md`, promote unresolved `PROBLEMS.md` residue to root `BACKLOG.md` (idempotent — dedup means re-entry adds no duplicate rows), finalize if it was the last task (architect Trigger B + spec-keeper, guarded by `finalized`), then git-expert commit/push/PR |
 | `done` | "This run is already complete. Nothing to resume." |
 
-For `implement`: pass `iteration` from the checkpoint so the loop doesn't restart from 0.
+For `implement`: pass `iteration` from the checkpoint so the loop doesn't restart from 0. If
+the loop returns `ESCALATED`, follow `/build-task` Step 3's escalation branch (promote residue
+→ `BACKLOG.md`, set the task `BLOCKED`, open a triage PR) rather than continuing to `audit`.
 
 ---
 
@@ -127,5 +129,5 @@ stage transition exactly as the originating pipeline does.
 ## Hard rules
 
 - Never re-run a stage that is already past. If `stage` is `audit`, don't re-run implement.
-- Never overwrite the repo-root design docs (`SPEC.md`, `CONCERN.md`, `ARCHITECTURE.md`, `PLAN.md`) when resuming — they are the source of truth.
+- Never overwrite the repo-root design docs (`SPEC.md`, `CONCERN.md`, `ARCHITECTURE.md`, `PLAN.md`) or the durable `BACKLOG.md` when resuming — they are the source of truth. Promotion only *appends* to `BACKLOG.md`, and is idempotent (dedup on `source+area+problem`), so re-entering the `git` stage never duplicates rows.
 - If the branch no longer exists, stop and ask the user before creating a new one.
