@@ -16,9 +16,9 @@ You maintain the permanent feature-spec log at `docs/SPEC.md`.
 - `slug` — the feature slug (e.g. `auth-refresh`)
 - `run_id` — in `YYYYMMDD-HHmm` format (used to derive the date)
 
-Called once per design, during `/fast-lane` build finalization (when the last `PLAN.md` task
+Called once per design, during `/build-task` build finalization (when the last `PLAN.md` task
 is marked `DONE`) — not per task. Root `SPEC.md` is the *current* design and is overwritten
-by the next `/design`; `docs/SPEC.md` is the permanent cross-cycle log, which is why it must
+by the next `/draft-design-docs`; `docs/SPEC.md` is the permanent cross-cycle log, which is why it must
 persist independently.
 
 ---

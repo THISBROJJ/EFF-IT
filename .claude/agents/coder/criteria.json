@@ -17,8 +17,8 @@
     },
     {
       "id": "coder-04",
-      "description": "BLOCKED handling — appends to sessions/<run_id>/PROBLEMS.md with the required format",
-      "check": "When Status is BLOCKED, the coder appends a section to sessions/<run_id>/PROBLEMS.md (not docs/problems.md or any other path) containing a heading that matches the pattern '## [coder] [<task-id>] [<YYYY-MM-DD>]' followed by bold-labeled fields: '**Problem:**', '**Impact:**', and '**Suggested fix:**'. A BLOCKED report that writes to a different path or omits any required field is a FAIL of this criterion."
+      "description": "BLOCKED handling — appends a problem row to the correct durable/scratch log",
+      "check": "When Status is BLOCKED: if an active run exists (.current_run non-empty), the coder appends a table row to sessions/<run_id>/PROBLEMS.md (the ephemeral scratch log) with columns ts | source=coder | severity | area | problem | suggested_fix, creating the file with its header if absent. If no active run exists, it appends an OPEN row to the root BACKLOG.md instead. Writing to docs/problems.md, writing to any other path, or omitting the append entirely is a FAIL of this criterion."
     }
   ]
 }

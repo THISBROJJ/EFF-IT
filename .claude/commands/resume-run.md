@@ -1,13 +1,13 @@
 ---
-name: resume
+name: resume-run
 description: Resume a pipeline run that was interrupted. Reads sessions/{run_id}/checkpoint.json and continues from the recorded stage.
 argument-hint: "[run_id]"
 allowed-tools: [Agent, Bash, Read, Write, Glob, Grep]
 ---
 
-# Resume
+# Resume Run
 
-Picks up an interrupted `/design` or `/fast-lane` pipeline from wherever it stopped.
+Picks up an interrupted `/draft-design-docs` or `/build-task` pipeline from wherever it stopped.
 Reads `checkpoint.json`, restores context, and re-enters the pipeline at the
 last incomplete stage. The checkpoint's `phase` field (`design` or `build`) selects which
 stage machine applies.
@@ -31,7 +31,7 @@ if [ -f .current_run ]; then
   # Check 2: run must not already be complete (build terminal=done, design terminal=plan-ready)
   stage=$(jq -r '.stage' "sessions/${run_id}/checkpoint.json")
   if [ "$stage" = "done" ] || [ "$stage" = "plan-ready" ]; then
-    echo "Error: run ${run_id} is already complete (stage: ${stage}). Start a new design with /design or build the next task with /fast-lane. To examine the run, read sessions/${run_id}/."
+    echo "Error: run ${run_id} is already complete (stage: ${stage}). Start a new design with /draft-design-docs or build the next task with /build-task. To examine the run, read sessions/${run_id}/."
     exit 1
   fi
 fi
@@ -88,19 +88,19 @@ A `design`-phase run stays on `main` until its `publish` stage.
 
 ## Step 3 — Re-enter the pipeline at `stage`
 
-### `phase: design` (re-enters `/design`)
+### `phase: design` (re-enters `/draft-design-docs`)
 
 | `stage` value | Resume action |
 |---|---|
-| `interrogate` | Cannot resume — no artifacts yet. Start fresh with `/design`. |
+| `interrogate` | Cannot resume — no artifacts yet. Start fresh with `/draft-design-docs`. |
 | `spec` | Re-run spec-drafter with context from IDEA_SUMMARY if available → repo-root `SPEC.md` |
 | `concern` | Spawn concern-resolver (`run_id`, `spec_path`=`SPEC.md`) → `CONCERN.md`; update `feature_types`; continue to architect |
 | `architect` | Spawn architect Trigger A (`SPEC.md` + `CONCERN.md`) → repo-root `ARCHITECTURE.md`; continue to orchestrate |
 | `orchestrate` | Spawn orchestrator (reads `SPEC.md`, `CONCERN.md`, `ARCHITECTURE.md`) → repo-root `PLAN.md`; continue to publish |
 | `publish` | Spawn git-expert: `docs/design-<slug>` branch, commit the four docs, open PR; continue to plan-ready |
-| `plan-ready` | Design complete. Merge the design PR, then run `/fast-lane`. |
+| `plan-ready` | Design complete. Merge the design PR, then run `/build-task`. |
 
-### `phase: build` (re-enters `/fast-lane`)
+### `phase: build` (re-enters `/build-task`)
 
 | `stage` value | Resume action |
 |---|---|
@@ -109,17 +109,19 @@ A `design`-phase run stays on `main` until its `publish` stage.
 | `implement` | Invoke implementation-loop with current `iteration` as starting point |
 | `audit` | Spawn karen with `SPEC.md`; on PASS invoke `/evaluate-run <run_id>` and append its summary to PROGRESS_TRACKER.md, continue to security |
 | `security` | Spawn security-reviewer |
-| `git` | Flip the task's `status`/`pr` in root `PLAN.md`, finalize if it was the last task (architect Trigger B + spec-keeper, guarded by `finalized`), then git-expert commit/push/PR |
+| `git` | Flip the task's `status`/`pr` in root `PLAN.md`, promote unresolved `PROBLEMS.md` residue to root `BACKLOG.md` (idempotent — dedup means re-entry adds no duplicate rows), finalize if it was the last task (architect Trigger B + spec-keeper, guarded by `finalized`), then git-expert commit/push/PR |
 | `done` | "This run is already complete. Nothing to resume." |
 
-For `implement`: pass `iteration` from the checkpoint so the loop doesn't restart from 0.
+For `implement`: pass `iteration` from the checkpoint so the loop doesn't restart from 0. If
+the loop returns `ESCALATED`, follow `/build-task` Step 3's escalation branch (promote residue
+→ `BACKLOG.md`, set the task `BLOCKED`, open a triage PR) rather than continuing to `audit`.
 
 ---
 
 ## Step 4 — Continue normally
 
-From the resumed stage, follow the same logic as the owning command (`/design` for a design
-run, `/fast-lane` for a build run) through to completion. Update `checkpoint.json` at each
+From the resumed stage, follow the same logic as the owning command (`/draft-design-docs` for a design
+run, `/build-task` for a build run) through to completion. Update `checkpoint.json` at each
 stage transition exactly as the originating pipeline does.
 
 ---
@@ -127,5 +129,5 @@ stage transition exactly as the originating pipeline does.
 ## Hard rules
 
 - Never re-run a stage that is already past. If `stage` is `audit`, don't re-run implement.
-- Never overwrite the repo-root design docs (`SPEC.md`, `CONCERN.md`, `ARCHITECTURE.md`, `PLAN.md`) when resuming — they are the source of truth.
+- Never overwrite the repo-root design docs (`SPEC.md`, `CONCERN.md`, `ARCHITECTURE.md`, `PLAN.md`) or the durable `BACKLOG.md` when resuming — they are the source of truth. Promotion only *appends* to `BACKLOG.md`, and is idempotent (dedup on `source+area+problem`), so re-entering the `git` stage never duplicates rows.
 - If the branch no longer exists, stop and ask the user before creating a new one.

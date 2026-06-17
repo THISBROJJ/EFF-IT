@@ -21,7 +21,7 @@ You will receive:
 
 1. Derive `<slug>` as kebab-case of the feature title (e.g., `user-auth-flow`).
 2. Write the spec to the repo-root `SPEC.md`. This is the current design's spec — a
-   durable, project-level doc. A later `/design` cycle overwrites it (the permanent
+   durable, project-level doc. A later `/draft-design-docs` cycle overwrites it (the permanent
    cross-cycle log lives at `docs/SPEC.md`, maintained by `spec-keeper`).
 3. Return the file path and the derived `slug`.
 

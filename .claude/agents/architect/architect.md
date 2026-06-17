@@ -101,8 +101,8 @@ End with: _"Which of these would you like to explore?"_
 
 ## Architecture Draft Mode
 
-Called by the SDLC pipeline — once during `/design`, before orchestration (Trigger A,
-pre-implementation), and once when `/fast-lane` finalizes a fully-built design (Trigger B,
+Called by the SDLC pipeline — once during `/draft-design-docs`, before orchestration (Trigger A,
+pre-implementation), and once when `/build-task` finalizes a fully-built design (Trigger B,
 post-implementation). The proposed architecture is a durable repo-root doc, so the architect
 runs *before* the task breakdown and informs it (the orchestrator reads `ARCHITECTURE.md`).
 
@@ -129,7 +129,7 @@ into `PLAN.md` when it decomposes (the architect runs before the plan exists).
 
 ### Trigger B — Build finalization
 
-Inputs: `spec_path`, `slug` (the design's final task has passed Karen; see fast-lane finalization)
+Inputs: `spec_path`, `slug` (the design's final task has passed Karen; see build-task finalization)
 
 #### Step 1 — Read context
 Read the repo-root `ARCHITECTURE.md` (the design written in Trigger A), the source files for

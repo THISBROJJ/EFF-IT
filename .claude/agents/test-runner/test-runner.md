@@ -84,14 +84,17 @@ Iteration: <N>
 <What the implementation-loop should do: spawn coder for X, or exit with PASS>
 ```
 
-If `Status: BLOCKED` or `Status: FAIL`, append to `sessions/<run_id>/PROBLEMS.md` (create if absent):
+If `Status: BLOCKED` or `Status: FAIL`, append one row to `sessions/<run_id>/PROBLEMS.md` —
+the ephemeral in-run scratch log. Create the file with its header if absent:
 
 ```
-## [test-runner] [<plan_path stem>] [<YYYY-MM-DD>]
-**Problem:** <what is blocked or failing>
-**Impact:** <which tasks or acceptance criteria are affected>
-**Suggested fix:** <what the coder should address next iteration>
+| ts | source | severity | area | problem | suggested_fix |
+|----|--------|----------|------|---------|---------------|
+| <ISO8601> | test-runner | HIGH\|MEDIUM\|LOW | <file:line or component> | <what is blocked or failing> | <what the coder should address next iteration> |
 ```
+
+These rows are scratch — `/build-task` promotes still-unresolved items to the durable root
+`BACKLOG.md` at run end.
 
 ## Test deprecation protocol
 

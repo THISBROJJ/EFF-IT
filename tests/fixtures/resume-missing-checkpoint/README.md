@@ -9,7 +9,7 @@ Simulates an abandoned or corrupted run.
 
 ## Expected behavior
 
-`/resume` must refuse with:
+`/resume-run` must refuse with:
 
 > "No checkpoint found for that run_id. Check `sessions/` for available runs."
 

@@ -3,10 +3,10 @@
 This document describes the **harness itself** — the reusable scaffold of hooks, agents, and
 commands that wraps any software project with an AI-assisted development workflow. It lives at
 `.claude/HARNESS.md` so that the repo-root `ARCHITECTURE.md` is free to hold the *project's*
-architecture (produced by `/design`). The harness lives in `.claude/` and `sessions/`.
+architecture (produced by `/draft-design-docs`). The harness lives in `.claude/` and `sessions/`.
 
 The **project's** durable design docs live at the repo root — `SPEC.md`, `CONCERN.md`,
-`ARCHITECTURE.md`, and `PLAN.md` — written by `/design` and consumed by `/fast-lane`. Project
+`ARCHITECTURE.md`, and `PLAN.md` — written by `/draft-design-docs` and consumed by `/build-task`. Project
 source goes in `src/`, `tests/`. The permanent cross-cycle feature log is `docs/SPEC.md`.
 
 ---
@@ -54,7 +54,7 @@ optional `model`. Live in `.claude/agents/` — Claude Code discovers them autom
 
 | Agent | Role |
 |---|---|
-| `orchestrator` | Reads root `SPEC.md`/`CONCERN.md`/`ARCHITECTURE.md`; writes the master task plan (root `PLAN.md`); folds security checklist into tasks |
+| `orchestrator` | Reads root `SPEC.md`/`CONCERN.md`/`ARCHITECTURE.md`; writes the master task plan (root `PLAN.md`); folds security checklist into tasks; reads root `BACKLOG.md` and folds open problems into the plan (carry-forward) |
 | `concern-resolver` | Scans root `SPEC.md` for security trigger keywords; writes root `CONCERN.md` |
 | `coder` | Implements a single task from the plan |
 | `karen` | Audits completed work against the original spec (PASS / PARTIAL / FAIL) |
@@ -79,15 +79,16 @@ and tools in a defined sequence. Live in `.claude/commands/` as flat `.md` files
 
 | Command | Trigger | What it does |
 |---|---|---|
-| `design` | `/design [idea]` | Design half: interrogate → spec → concern → architect → orchestrate. Writes the four root design docs and opens a design PR. Stops. |
-| `fast-lane` | `/fast-lane [task id]` | Build half: read root `PLAN.md`, pick one task → implement → audit → security → atomic PR; flips the task to `DONE`. Re-invoke per task. |
-| `resume` | `/resume [run_id]` | Resume an interrupted design or build run from its checkpoint (`phase` selects the stage machine) |
+| `design` | `/draft-design-docs [idea]` | Design half: interrogate → spec → concern → architect → orchestrate. Writes the four root design docs and opens a design PR. Stops. |
+| `setup-code-structure` | `/setup-code-structure` | One-time bootstrap (after design merge, before first build): read root `ARCHITECTURE.md` + `PLAN.md` scopes, scaffold the directory tree with explainer `README.md` stubs. Idempotent. |
+| `build-task` | `/build-task [task id]` | Build half: read root `PLAN.md`, pick one task → implement → audit → security → atomic PR; flips the task to `DONE`. Re-invoke per task. |
+| `resume` | `/resume-run [run_id]` | Resume an interrupted design or build run from its checkpoint (`phase` selects the stage machine) |
 
 ### Utility commands
 
 | Command | Trigger | What it does |
 |---|---|---|
-| `implementation-loop` | (invoked by fast-lane) | Spawns coders, runs tests, cycles until all tests pass or max iterations reached |
+| `implementation-loop` | (invoked by build-task) | Spawns coders, runs tests, cycles until all tests pass or max iterations reached |
 | `idea-interrogator` | `/idea-interrogator` | Socratic interview loop until the problem is fully specified |
 | `evaluate-run` | `/evaluate-run [run_id]` | Scores a completed pipeline run by running `agent-evaluator` against each agent trace |
 
@@ -119,7 +120,7 @@ optional supporting files (`references/`, `scripts/`, `tests/`).
 ## Pipeline flow
 
 ```
-/design <idea>   (design half — produces the durable root docs, opens a PR, then stops)
+/draft-design-docs <idea>   (design half — produces the durable root docs, opens a PR, then stops)
   │
   ├─ session setup        →  sessions/<run_id>/checkpoint.json (phase: design)
   ├─ idea-interrogator    (interactive)
@@ -129,7 +130,13 @@ optional supporting files (`references/`, `scripts/`, `tests/`).
   ├─ orchestrator agent   →  PLAN.md          (repo root; master tasklist, status per task)
   └─ git-expert agent     →  docs/design-<slug> branch → design PR  →  user merges
 
-/fast-lane [task]   (build half — one task per invocation, repeat until PLAN.md is drained)
+/setup-code-structure   (one-time bootstrap — run after the design PR merges, before the first build)
+  │
+  ├─ read root ARCHITECTURE.md (+ PLAN.md task scopes) → derive intended directory tree
+  ├─ confirm the layout with the user (mandatory gate)
+  └─ create missing dirs + explainer README.md stubs (idempotent; skips what exists)
+
+/build-task [task]   (build half — one task per invocation, repeat until PLAN.md is drained)
   │
   ├─ read root PLAN.md, pick a buildable task (deps DONE), session setup (phase: build)
   ├─ git-expert agent     →  feat/<task-slug> branch
@@ -142,7 +149,7 @@ optional supporting files (`references/`, `scripts/`, `tests/`).
   ├─ if last task: architect (Trigger B) → ARCHITECTURE.md as-built; spec-keeper → docs/SPEC.md
   └─ git-expert agent     →  commit → push → atomic PR
 
-/resume <run_id>
+/resume-run <run_id>
   └─ reads sessions/<run_id>/checkpoint.json → re-enters the owning pipeline at last stage
 ```
 
@@ -155,10 +162,11 @@ under `sessions/`. The split is deliberate: design is durable, build telemetry i
 
 ```
 <repo root>/
-  SPEC.md            ← current design spec        (spec-drafter; overwritten next /design)
+  SPEC.md            ← current design spec        (spec-drafter; overwritten next /draft-design-docs)
   CONCERN.md         ← triggered security concerns (concern-resolver)
   ARCHITECTURE.md    ← project architecture        (architect; as-built appended at finalize)
-  PLAN.md            ← master tasklist, status+pr per task, finalized flag (orchestrator + fast-lane)
+  PLAN.md            ← master tasklist, status+pr per task, finalized flag (orchestrator + build-task)
+  BACKLOG.md         ← durable problem backlog, table rows (build-task promotes; orchestrator carries forward; created lazily on first promotion)
 docs/
   SPEC.md            ← permanent cross-cycle feature log (spec-keeper, append-only)
 sessions/
@@ -166,7 +174,7 @@ sessions/
     checkpoint.json     ← current stage + metadata
     PLAN.md             ← per-task working slice (build phase only; loop may mutate freely)
     PROGRESS_TRACKER.md ← per-agent I/O log (auto-committed by hook)
-    PROBLEMS.md         ← karen and security findings
+    PROBLEMS.md         ← in-run findings scratch (table rows); promoted to root BACKLOG.md at run end
     EVALUATION.md       ← evaluate-run scores
     traces/             ← extracted agent traces + verdicts
     session_log.json    ← structured tool-call log for this run
@@ -190,7 +198,7 @@ sessions/
   "feature_types": ["open_endpoint", "jwt"]
 }
 ```
-- `"phase"` — `design` or `build`; selects the stage machine `/resume` re-enters.
+- `"phase"` — `design` or `build`; selects the stage machine `/resume-run` re-enters.
 - Design stages: `interrogate → spec → concern → architect → orchestrate → publish → plan-ready`.
 - Build stages: `task-select → branch → implement → audit → security → git → done`.
 - `"task_id"` — build phase only; the master-plan task being built. Absent in design.
@@ -202,17 +210,32 @@ sessions/
   spec-drafter mints them in `SPEC.md`; orchestrator references them in `PLAN.md`
   (`acceptance_criteria[].id` / `covered_by`); karen reuses the same IDs when a spec is
   passed. IDs are stable — never renumber an existing AC; append new ones.
-- **Plan task status.** Every `PLAN.md` task carries `status: TODO|DONE` and a `pr:` URL
-  field. The orchestrator writes them `TODO`/empty; `/fast-lane` owns their lifecycle and is
-  the only writer that flips them.
+- **Plan task status.** Every `PLAN.md` task carries `status: TODO|DONE|BLOCKED` and a `pr:`
+  URL field. The orchestrator writes them `TODO`/empty; `/build-task` owns their lifecycle — it
+  flips `status` (`DONE` when the PR lands, `BLOCKED` on escalation) and `pr:`, and may
+  additionally *append* a new `TODO` task promoted from a `BACKLOG.md` row (recording
+  `promoted_to`). No other writer mutates `PLAN.md`.
+- **Problem backlog.** Unresolved problems live in the durable root `BACKLOG.md` as table rows:
+  `id | discovered | source | severity | area | problem | suggested_fix | status | promoted_to`.
+  `id` is `BL-NNN` (monotonic, never renumbered, like `AC-NN`); `severity` is `HIGH|MEDIUM|LOW`;
+  `status` is `OPEN|PROMOTED|RESOLVED|WONT_FIX`. `/build-task` creates the file on first
+  promotion (lazy) and appends `OPEN` rows at run end, deduped on `source+area+problem`; the
+  orchestrator reads it each design cycle, folds `OPEN` rows the new spec covers into `TODO`
+  tasks (→ `PROMOTED`), and carries the rest forward (ids preserved). The ephemeral
+  `sessions/<run_id>/PROBLEMS.md` is the in-run scratch this promotes from — never a
+  cross-cycle source (its run-scoped path can't be resolved from a later run). `BACKLOG.md`
+  records problems in the *project being built*; defects in the *harness scaffold* go to
+  `HARNESS_FINDINGS.md`.
 
 ## Design/build invariant
 
-One `/design` cycle fills the four root docs; `/fast-lane` then drains `PLAN.md` task by task.
-A later `/design` **overwrites** the root docs — the clean-tree preflight does not protect a
+One `/draft-design-docs` cycle fills the four root docs; `/build-task` then drains `PLAN.md` task by task.
+A later `/draft-design-docs` **overwrites** the root docs — the clean-tree preflight does not protect a
 committed `PLAN.md`. Therefore: **finish or shelve the current design before starting a new
-one.** `docs/SPEC.md` is the only memory that survives across cycles, which is why
-`spec-keeper` logs there at finalization.
+one.** `docs/SPEC.md` (the shipped-spec log) and `BACKLOG.md` (the open-problem queue) are the
+memory that survives across cycles — `spec-keeper` logs to the former at finalization, and
+`/build-task` promotes unresolved problems to the latter, which the orchestrator carries
+forward into the next plan.
 
 ---
 
@@ -254,17 +277,33 @@ Both paths are complementary: the per-run log captures structured events for a s
 
 ## Change log
 
+### 2026-06-11 — durable problem backlog
+
+**What changed.** Closed the problem-feedback loop with a new durable root `BACKLOG.md`.
+
+1. **Fixed the dead cross-cycle path.** The orchestrator previously read
+   `sessions/<run_id>/PROBLEMS.md` to fold problems into the next plan, but it runs in
+   `/draft-design-docs` with a fresh `run_id` and could never resolve that path. It now reads
+   root `BACKLOG.md`, folds `OPEN` rows into the new plan, and carries the rest forward.
+2. **Stopped problems evaporating.** `/build-task` promotes unresolved residue (escalation,
+   `BLOCKED`, deferred findings) from the ephemeral `PROBLEMS.md` into `BACKLOG.md` at run end
+   (riding the status-flip commit; on escalation it sets the task `BLOCKED` and opens a triage
+   PR). `OPEN` rows are buildable — `/build-task` can fix one as its own session.
+3. **One job per file + cheaper format.** `PROBLEMS.md` is now in-run scratch only, and both it
+   and `BACKLOG.md` use compact table rows instead of prose blocks. Task status enum gained
+   `BLOCKED`. The stray `coder` → `docs/problems.md` fallback was repointed to `BACKLOG.md`.
+
 ### 2026-06-10 — decouple-design-build
 
 **What changed.** Split the monolithic `/run` into two commands and promoted design artifacts
 to durable, repo-root project docs:
 
-1. **`/run` deleted; `/design` added.** `/design` owns the front half — interrogate → spec →
+1. **`/run` deleted; `/draft-design-docs` added.** `/draft-design-docs` owns the front half — interrogate → spec →
    concern → architect → orchestrate — and writes the four durable docs to the repo root
    (`SPEC.md`, `CONCERN.md`, `ARCHITECTURE.md`, `PLAN.md`), then opens a `docs/design-<slug>`
    PR and stops. This removes the duplicated `orchestrate → git` build sequence that `run.md`
-   and `fast-lane.md` both carried (CLAUDE.md §13).
-2. **`/fast-lane` is now the build half.** It reads the master root `PLAN.md`, builds one
+   and `build-task.md` both carried (CLAUDE.md §13).
+2. **`/build-task` is now the build half.** It reads the master root `PLAN.md`, builds one
    buildable task (dependencies `DONE`) per invocation through implement → karen → security →
    atomic PR, and flips that task's `status`/`pr` in the master plan. Re-invoke per task.
 3. **Architect reordered before orchestrate.** Trigger A now drafts `ARCHITECTURE.md` from
@@ -279,7 +318,7 @@ to durable, repo-root project docs:
 **How it fits.** Design (think) and build (do) are now separate commands with one shared
 source of truth — the master root `PLAN.md`. Progress across many atomic PRs is read from one
 file. `docs/SPEC.md` remains the cross-cycle history; the root docs are the current cycle and
-are overwritten by the next `/design` (see Design/build invariant).
+are overwritten by the next `/draft-design-docs` (see Design/build invariant).
 
 ### 2026-05-18 — harness-eval-paths
 
@@ -304,11 +343,11 @@ per-run artifact paths inconsistent across the harness:
    though every caller passed `sessions/<run_id>/SPEC.md` and
    `sessions/<run_id>/ARCHITECTURE.md`. Both agent prompts and all internal
    cross-references now use the session paths exclusively.
-4. **Fast-lane gained an architect step.** `commands/fast-lane.md` now invokes
+4. **Fast-lane gained an architect step.** `commands/build-task.md` now invokes
    architect Trigger A between `concern-resolver` and `implementation-loop`,
    matching `/run`. Checkpoint transitions `concern_resolve → architect →
-   implement` mirror `run.md` so `/resume` needs no fast-lane-specific
-   branches. Without this step, fast-lane silently skipped security-task
+   implement` mirror `run.md` so `/resume-run` needs no build-task-specific
+   branches. Without this step, build-task silently skipped security-task
    injection into PLAN.md.
 5. **Stale `references/` paths corrected.** `commands/spec-drafter.md` and
    `commands/unit-test-writer.md` previously pointed at `references/<file>.md`
@@ -324,12 +363,12 @@ agent traces, criteria files, and verdict reports now live in one location
 artifact a single run produces is now under that one directory, so cleanup is
 `rm -rf sessions/<id>`, debugging is `ls sessions/<id>`, and there is no
 parallel `docs/` or `reports/` tree to keep in sync. Fast-lane and `/run` now
-follow the same agent sequence, which simplifies `/resume`.
+follow the same agent sequence, which simplifies `/resume-run`.
 
 **Deviations from the proposed session architecture
 (`sessions/20260518-2347/ARCHITECTURE.md`).** None of substance. The proposed
 design — co-located verdict JSON next to JSONL trace, session-folder as single
-artifact root, fast-lane architect step keyed by checkpoint stage, no
+artifact root, build-task architect step keyed by checkpoint stage, no
 `schemas/` directory — was implemented as drafted. One execution-level note
 worth recording: the implementation landed across multiple follow-on commits
 (`851fe35` P1 gaps, `a38043f` P2 / evaluate-run, `26c317a` S1 wiring,

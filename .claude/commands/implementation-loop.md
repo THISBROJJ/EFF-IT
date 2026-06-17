@@ -14,13 +14,13 @@ reached. Receives a task plan and spec path; spawns coders, runs tests, repeats.
 
 ## Inputs
 
-- `PLAN_PATH`: path to the per-task working plan (e.g., `sessions/<run_id>/PLAN.md`). `/fast-lane` writes this working slice containing the single task it selected from the master `PLAN.md`; the loop may mutate it freely (punch lists, remediation) without touching the durable master plan at the repo root.
+- `PLAN_PATH`: path to the per-task working plan (e.g., `sessions/<run_id>/PLAN.md`). `/build-task` writes this working slice containing the single task it selected from the master `PLAN.md`; the loop may mutate it freely (punch lists, remediation) without touching the durable master plan at the repo root.
 - `SPEC_PATH`: path to the spec (the repo-root `SPEC.md`)
 - `run_id`: the session run identifier (e.g., `20260515-1430`); used to locate all session artifacts
 - `max_iterations`: max cycles before escalating (default: 5)
 - `punch_list` (optional): additional tasks from karen or security-reviewer
 
-`run_id` is passed by the caller (`/fast-lane`). All ephemeral session artifacts live at `sessions/<run_id>/`.
+`run_id` is passed by the caller (`/build-task`). All ephemeral session artifacts live at `sessions/<run_id>/`.
 
 ---
 
@@ -53,7 +53,7 @@ For each parallel group (process all parallel groups before sequential):
 
 After all agents in the group complete:
 
-**Karen** — For each **coder** task, spawn Karen simultaneously (one Agent call per coder task). Pass the task description as the original ask and the task's `scope` as the change set. Wait for all Karen verdicts. PASS → continue; PARTIAL or FAIL → append findings to `sessions/<run_id>/PROBLEMS.md`, mark task `NEEDS_RETRY`.
+**Karen** — For each **coder** task, spawn Karen simultaneously (one Agent call per coder task). Pass the task description as the original ask and the task's `scope` as the change set. Wait for all Karen verdicts. PASS → continue; PARTIAL or FAIL → append a row to the ephemeral `sessions/<run_id>/PROBLEMS.md` scratch log (`source: karen`; one row per finding, schema in `.claude/HARNESS.md`), mark task `NEEDS_RETRY`.
 
 **REQUIRED — record before proceeding to next group:** For **every** agent in this group (coder and non-coder alike), spawn `session-keeper` in parallel (one call per agent) with: `run_id`, `agent_name`, `task_id`, `iteration`, `status` (`DONE` or `BLOCKED`), `summary`, `karen_verdict` (Karen's verdict for coder tasks; `"n/a"` for all other agent types), `karen_findings`, `scope`. Wait for **all** session-keeper calls to complete. Do not start the next group until this step finishes.
 
@@ -65,7 +65,7 @@ Coders must not modify test files — the tests written in step 1.5 are the acce
 
 For each sequential group, in order:
 - Spawn one agent at a time. Pass the result of the prior task as `context` to the next.
-- **Karen** (coder tasks only): after the agent completes, spawn Karen with the task description and scope. Wait for verdict. PASS → continue; PARTIAL or FAIL → append findings to `sessions/<run_id>/PROBLEMS.md`, mark task `NEEDS_RETRY`.
+- **Karen** (coder tasks only): after the agent completes, spawn Karen with the task description and scope. Wait for verdict. PASS → continue; PARTIAL or FAIL → append a row to the ephemeral `sessions/<run_id>/PROBLEMS.md` scratch log (`source: karen`; one row per finding, schema in `.claude/HARNESS.md`), mark task `NEEDS_RETRY`.
 - **REQUIRED — record before proceeding to next task:** Spawn `session-keeper` with: `run_id`, `agent_name`, `task_id`, `iteration`, `status` (`DONE` or `BLOCKED`), `summary`, `karen_verdict` (Karen's verdict for coder tasks; `"n/a"` for all other agent types), `karen_findings`, `scope`. Wait for session-keeper to complete. Do not start the next task until this step finishes.
 
 **4. Run tests**
@@ -92,7 +92,7 @@ Spawn the `security-reviewer` agent with `run_id` and `skill_findings: SKILL_SEC
 | Security verdict | Action |
 |---|---|
 | PASS | Exit loop with STATUS: PASS |
-| FINDINGS | Append remediation tasks to `sessions/<run_id>/PLAN.md`; agent writes findings to `sessions/<run_id>/PROBLEMS.md`; go to Iteration N+1 (or escalate if max_iterations reached — include security findings in escalation report) |
+| FINDINGS | Append remediation tasks to `sessions/<run_id>/PLAN.md` (the actionable queue); the agent writes findings as rows to the ephemeral `sessions/<run_id>/PROBLEMS.md` scratch log; go to Iteration N+1 (or escalate if max_iterations reached — include security findings in escalation report) |
 
 **5. Max iterations check**
 
@@ -116,6 +116,10 @@ Return to the caller with:
 ---
 
 ## Escalation format (max iterations reached without PASS)
+
+This report is the loop's return value to `/build-task`, which records the residue durably
+(promotes it to the root `BACKLOG.md` and marks the task `BLOCKED`). The loop itself writes
+nothing durable — `sessions/<run_id>/PROBLEMS.md` is ephemeral scratch that dies with the run.
 
 ```
 # Implementation Loop — Escalation
